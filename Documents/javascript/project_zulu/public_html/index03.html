@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>project_zulu</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src="js/ammo.js"></script>
+        <script type="text/javascript" src="js/orbitControls.js"></script>
+        <script type="text/javascript" src="js/physicsUtil.js"></script>
+        <script type="text/javascript" src="js/zee.js"></script>
+        <script type="text/javascript" src="js/bullets.js"></script>
+        <script type="text/javascript" src="js/entities.js"></script>
+        
+
+        <script type="text/javascript">
+            // global variables are in zee.js 
+            var init = function () {
+
+                initScene();
+                camera.position.set(120, 70, 130);
+                camera.lookAt(new THREE.Vector3());
+                controls = new THREE.OrbitControls(camera);
+
+                //green cube for visual testing
+                geometry = new THREE.BoxGeometry(5, 5, 5);
+                material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+                cube = new THREE.Mesh(geometry, material);
+                cube.material.wireframe = true;
+                scene.add(cube);
+
+                //trying grid plane
+
+                // grid
+
+                /*var sizeX = 50, sizeZ = 100, step = 5;
+                 
+                 var geometry = new THREE.Geometry();
+                 
+                 for (var i = -sizeZ; i <= sizeZ; i += step) {
+                 for (var j = -sizeX; j <= sizeX; j += step){
+                 geometry.vertices.push(new THREE.Vector3(j, 5, i));}
+                 //geometry.vertices.push(new THREE.Vector3(sizeX, 5, i));
+                 
+                 }
+                 geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+                 geometry.computeBoundingSphere();*/
+                /*for (var i = -sizeX; i <= sizeX; i += step) {
+                 
+                 geometry.vertices.push(new THREE.Vector3(i, 5, -sizeZ));
+                 geometry.vertices.push(new THREE.Vector3(i, 5, sizeZ));
+                 
+                 }*/
+
+                //var material = new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true});
+
+                //var line = new THREE.Line(geometry, material, THREE.LinePieces);
+                //var line = new THREE.Mesh(geometry);
+
+                //scene.add(line);
+
+                // raycaster and plane
+
+                raycaster = new THREE.Raycaster();
+                mouse = new THREE.Vector2();
+
+                var geometry = new THREE.PlaneGeometry(100, 200, 20, 40);
+                geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+
+                // materials
+                var materials = [];
+                materials.push(new THREE.MeshBasicMaterial({
+                    color: 0x999999, side: THREE.DoubleSide
+                }));
+                materials.push(new THREE.MeshBasicMaterial({
+                    color: 0x888888, side: THREE.DoubleSide
+                }));
+                materials.push(new THREE.MeshBasicMaterial({
+                    color: 0x777777, side: THREE.DoubleSide
+                }));
+
+                // Add materialIndex to face
+                var l = geometry.faces.length / 2;
+                for (var i = 0; i < l; i++) {
+                    var j = 2 * i;
+                    geometry.faces[j].materialIndex = i % 3;
+                    geometry.faces[j + 1].materialIndex = i % 3;
+                }
+
+                plane = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+                //plane = new THREE.Mesh(geometry);
+                //plane.material.color.setHex(0x999999);
+                //plane.visible = false;
+                // 21-41 42-62 63-83
+                for (var i = 21; i < 105; ++i) {
+                    plane.geometry.vertices[i].y = 10;
+                }
+                for (var i = 105; i < 147; ++i) {
+                    plane.geometry.vertices[i].y = 5;
+                }
+
+                //plane.geometry.normalsNeedUpdate = true;
+                //plane.geometry.elementsNeedUpdate = true;
+                plane.geometry.computeFaceNormals(); // super important line
+                scene.add(plane);
+                objects.push(plane);
+                //objects.push(line);
+
+                // Lights
+
+                var ambientLight = new THREE.AmbientLight(0x606060);
+                scene.add(ambientLight);
+
+                var directionalLight = new THREE.DirectionalLight(0xffffff);
+                directionalLight.position.set(1, 0.75, 0.5).normalize();
+                scene.add(directionalLight);
+
+                //document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+
+
+                //create tanks and add them to collider to be selectable
+                var loader = new THREE.JSONLoader();
+                tank01 = new Tank('blue', scene, new THREE.Vector3(-10, 0, 95), loader, camera, entitiesCollider, Math.PI);
+                tank02 = new Tank('red', scene, new THREE.Vector3(0, 0, -65), loader, camera, entitiesCollider);
+                tank03 = new Tank('blue', scene, new THREE.Vector3(10, 0, 95), loader, camera, entitiesCollider, Math.PI);
+                var temp = [];
+                tankRed = new Tank('red', scene, new THREE.Vector3(0,0,5), loader, camera, entitiesCollider);
+                tanks.push(tank01, tank02, tank03, tankRed);
+
+                var boxGeo = new THREE.BoxGeometry(.5, .5, .5);
+                var boxMat = new THREE.MeshBasicMaterial({color: 0X00ff00});
+                box = new THREE.Mesh(boxGeo, boxMat);
+                scene.add(box);
+
+                var clock = new THREE.Clock();
+
+                var renderLoop = function () {
+                    //// try
+                    //tank = tank02;
+
+                    var dt = clock.getDelta();
+                    for (i = 0; i < tanks.length; ++i) {
+                        tanks[i].update(dt);
+                    }
+                    ////////////////// incoming mado scientisto
+                    //var zee = new THREE.Vector3(0,.9,2);
+                    
+                   
+
+                    controls.update();
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(renderLoop);
+                };
+
+                renderLoop();
+
+            };
+            window.onload = init;
+        </script>
+    </head>
+    <body>
+        <canvas style="width:100%;height:95%;border:1px gray solid;"></canvas>
+    </body>
+</html>
