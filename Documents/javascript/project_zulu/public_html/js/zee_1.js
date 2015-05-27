@@ -14,16 +14,17 @@ var tank, tank01, tank02, tank03;
 var tanks = [];
 var entitiesCollider = [];
 var myCanvas, w, h;
+var shiftPressed = false;
 
 var hitProb = {
-    'tank':{'tank':.8, 'art':.9, 'inf':.5}
-    
+    'tank': {'tank': .8, 'art': .9, 'inf': .5}
+
 };
 
 var terrainType = {
-    0 : 1,
-    1 : 2,
-    2 : 0
+    0: 1,
+    1: 2,
+    2: 0
 };
 
 var initScene = function () {
@@ -60,13 +61,13 @@ function angleBetweenQuats(qBefore, qAfter) {
     return 2 * halfTheta;
 }
 
-function lookTowards(fromObject, toPosition, dTheta,goalDirection,tank) {
+function lookTowards(fromObject, toPosition, dTheta, goalDirection, tank) {
     var quat0 = new THREE.Quaternion();
     var eye = fromObject.position;
     quat0.setFromRotationMatrix(fromObject.matrix);
     var up = new THREE.Vector3(0, 1, 0);
     //var center = toPosition;
-    if(goalDirection)
+    if (goalDirection)
         var center = goalDirection;
     else
         //var center = new THREE.Vector3(toPosition.x,0,toPosition.z);
@@ -80,11 +81,11 @@ function lookTowards(fromObject, toPosition, dTheta,goalDirection,tank) {
     var frac = dTheta / deltaTheta;
     if (frac > 1)
         frac = 1;
-    
+
     fromObject.quaternion.slerp(quat1, frac);
-    if(tank && !tank.rotatedToTarget){
-    if (deltaTheta<0.001 || isNaN(deltaTheta))
-        tank.rotatedToTarget = true;
+    if (tank && !tank.rotatedToTarget) {
+        if (deltaTheta < 0.001 || isNaN(deltaTheta))
+            tank.rotatedToTarget = true;
     }
 }
 
@@ -121,38 +122,73 @@ function onDocumentMouseDown(event) {
     var planeIntersects = raycaster.intersectObjects(objects);
     var intersects = raycaster.intersectObjects(entitiesCollider);
 
-    if(event.button === 2){
+    if (event.button === 2) {
         tank = null;
         for (i = 0; i < tanks.length; ++i) {
-            tanks[i].selectMesh.visible=false;}
+            tanks[i].selectMesh.visible = false;
+            tanks[i].line.visible = false;
+        }
         return;
     }
     if (intersects.length > 0) {
         //console.log(intersects[0].point.x + "---" + intersects[0].point.z);
         for (i = 0; i < tanks.length; ++i) {
-            tanks[i].selectMesh.visible=false;
+            tanks[i].selectMesh.visible = false;
             if (tanks[i].chassisMesh === intersects[0].object) {
                 tank = tanks[i];
                 tank.selectMesh.visible = true;
+                tank.line.visible = true;
                 //setTimeout(function () {
                 //    tank.selectMesh.visible = false;
                 //}, 1000);
-
-                //break;
+                break;
             }
         }
-        //tank=tank02;
-        //tank.selectMesh.visible = true;
+
+    }
+    else if (shiftPressed && planeIntersects.length > 0 && event.button === 0) {
+        if (tank) {
+            //console.log('looo');
+            
+            tank.wayPoints.push(planeIntersects[0].point);
+            //tank.line.geometry.vertices[tank.wayPoints.length] = planeIntersects[0].point;
+            //tank.line.geometry.verticesNeedUpdate = true;
+            console.log(tank.wayPoints.length);
+            this.wayPointsClicked += 1;
+            
+
+        }
     }
     else {
         if (planeIntersects.length > 0 && event.button === 0) {
-            //console.log("hedef secildi");
-            //console.log(planeIntersects[0].point.y);
-            if (tank){
-                //tank.state = 'moving';
-                tank.goal = planeIntersects[0].point;
-                //tank.goal = new THREE.Vector3(planeIntersects[0].point.x,0,planeIntersects[0].point.z);
-        }}
+
+            if (tank) {
+
+                tank.wayPoints = [];
+                //tank.wayPoints.pop();
+                //tank.line.geometry.vertices[1] = planeIntersects[0].point;
+                //tank.line.geometry.verticesNeedUpdate = true;
+                tank.wayPoints.push(planeIntersects[0].point);
+                console.log(tank.wayPoints.length);
+
+
+            }
+        }
     }
 
+}
+function onKeyDown(evt) {
+    switch (evt.keyCode) {
+        case 16: //shift key
+            shiftPressed = true;
+            break;
+    }
+}
+
+function onKeyUp(evt) {
+    switch (evt.keyCode) {
+        case 16: //shift key
+            shiftPressed = false;
+            break;
+    }
 }

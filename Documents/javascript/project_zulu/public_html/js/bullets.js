@@ -12,6 +12,7 @@ function Ammos(id) {
     this.speed = 25.0;
     this.target = undefined;
     this.destroyedTarget = [];
+    this.cube = new THREE.Object3D();
     //this.cloud = cloud1;
     var loader = new THREE.JSONLoader();
     var that = this;

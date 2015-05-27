@@ -46,7 +46,7 @@ var entityProto = {
         var earthLevel = ray1.intersectObject(plane);
 
         var dTheta = dt * this.rotationSpeed;
-        var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
+        //var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
 
 
 
@@ -65,22 +65,23 @@ var entityProto = {
             //if (this.normal !== collisions[0].face.normal)
             this.goal2 = goalDirection;
             this.normalY = collisions[0].face.normal.clone().y;
-            
+
             var yDir = this.goal2.clone();
             yDir.normalize();
-            
+
             if (this.goal.y - this.pos.y < .01 && this.normalY === 1)
                 this.goal2 = null;
-            if (yDir.y>0) this.normalY = Math.pow(this.normalY,6);
-            
+            if (yDir.y > 0)
+                this.normalY = Math.pow(this.normalY, 6);
+
 
 
         }
 
         //if (dx.length() > .3)
         lookTowards(this.mesh, this.goal, dTheta, this.goal2);
-        if (dx.length() > this.closeEnough)
-            this.mesh.translateZ(dt * this.speed * terrainType[this.terrainMaterial] *this.normalY);
+        //if (dx.length() > this.closeEnough)
+        this.mesh.translateZ(dt * this.speed * terrainType[this.terrainMaterial] * this.normalY);
         if (earthLevel[0])
             this.mesh.position.y = earthLevel[0].point.y;
 
@@ -148,15 +149,39 @@ var entityProto = {
 
         if (this.shooting)
             this.shoot(dt);
-        if(this.goal)
-        var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
-        else dx = new THREE.Vector3();
+
+        //beginning of the line
+//        if(this.wayPointsClicked - this.wayPoints.length>0){
+//        for (var i =0 ; i< this.wayPointsClicked - this.wayPoints.length; ++i){
+//            this.line.geometry.vertices[10 -this.wayPointsClicked + this.wayPoints.length]= this.pos;
+//        }
+//    }
+        if (this.wayPoints[0]){
+        this.line.geometry.vertices[0] = this.pos;
+        for (var i =0 ; i<this.wayPoints.length; ++i){
+            this.line.geometry.vertices[i+1]=this.wayPoints[i];
+        }
+
+        for (var i = 0; i < 9 - this.wayPoints.length; ++i) {
+            this.line.geometry.vertices[9-i] = this.wayPoints[this.wayPoints.length-1];
+            //this.line.geometry.vertices[this.wayPointsClicked - this.wayPoints.length -1 ] = this.pos;
+
+        }
+        this.line.geometry.verticesNeedUpdate = true;}
+
+        if (this.wayPoints[0])
+            this.goal = this.wayPoints[0];
+        if (this.goal)
+            var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
+        else
+            dx = new THREE.Vector3().copy(this.pos);
 
         this.getClosestTarget();
 
         if (
                 //this.state !== 'engaged' && 
-                dx.length() > this.closeEnough)
+                dx.length() > this.closeEnough
+                || this.wayPoints.length > 0)
             this.state = 'moving';
 
         switch (this.state) {
@@ -168,6 +193,7 @@ var entityProto = {
                 if (this.health < 0)
                     this.state = 'dead';
                 if (dx.length() <= this.closeEnough) {
+                    this.wayPoints.shift();
                     this.state = 'idle';
                     return;
                 }
@@ -218,12 +244,34 @@ function Tank(side, scene, loc, loader, camera, collid, yRotation) {
 
     //this.goal = new THREE.Vector3(loc.x, loc.y, loc.z-3.45);
     //this.goal = new THREE.Vector3();
-    this.goal;
+
+
     //this.goal = new THREE.Vector3(100, 100, 100);
 
     //movement
     this.terrainMaterial = 0;
     this.normalY = 1;
+    this.wayPoints = [];
+    this.goal;
+
+    this.mesh = new THREE.Object3D();
+    this.turretMesh = new THREE.Object3D();
+    this.barrelMesh = new THREE.Object3D();
+    this.pos = new THREE.Vector3();
+
+    //movement line
+    var material = new THREE.LineBasicMaterial({color: 0xff0000});
+    var geometry = new THREE.Geometry();
+    for (var i = 0; i < 10; ++i) {
+        geometry.vertices.push(new THREE.Vector3(loc.x, loc.y, loc.z));
+    }
+    this.line = new THREE.Line(geometry, material);
+    this.line.geometry.verticesNeedUpdate = true;
+    this.line.visible = false;
+    scene.add(this.line);
+    this.wayPointsClicked = 0;
+
+    //this.wayPoints.push(this.pos)
 
     this.state = 'idle';
     this.side = side;
@@ -268,6 +316,7 @@ function Tank(side, scene, loc, loader, camera, collid, yRotation) {
         that.chassisMesh.castShadow = true;
         that.mesh = that.chassisMesh;
         that.pos = that.chassisMesh.position;
+        that.wayPoints.push(that.pos);
         collid.push(that.chassisMesh);
         scene.add(that.chassisMesh);
 
@@ -306,88 +355,6 @@ function Tank(side, scene, loc, loader, camera, collid, yRotation) {
 
     loader.load("models/tank/body.json", onGeometry);
 
-
-
-    this.quat = new THREE.Quaternion();
-
-    /*this.update = function (dt) {
-     
-     if (!this.barrelMesh)
-     return;
-     
-     if (this.fireGun) {
-     
-     for (i = 0; i < this.ammoNumber; ++i) {
-     if (this.ammo[i].toTarget)
-     this.ammo[i].hit(dt);
-     
-     }
-     
-     
-     for (i = 0; i < this.ammoNumber; ++i) {
-     if (this.ammo[i].fired && !this.ammo[i].toTarget)
-     this.ammo[i].fly(dt);
-     
-     }
-     }
-     
-     var dTheta = dt * this.rotationSpeed;
-     this.quat.setFromAxisAngle(yUnit, dTheta);
-     this.chassisMesh.quaternion.multiply(this.quat);
-     var dZ = dt * this.translationSpeed;
-     this.chassisMesh.translateZ(dZ);
-     
-     dTheta = dt * this.traverseSpeed;
-     this.quat.setFromAxisAngle(yUnit, dTheta);
-     this.turretMesh.quaternion.multiply(this.quat);
-     
-     var yhead = new THREE.Vector3(0, 0, 1);
-     yhead.transformDirection(this.barrelMesh.matrixWorld);
-     //console.log(yhead.y);
-     //if (yhead.y<=0)/// try to impede elevation of barrel under 0
-     //	this.elevateSpeed = -.25
-     dTheta = dt * this.elevateSpeed;
-     this.quat.setFromAxisAngle(xUnit, dTheta);
-     this.barrelMesh.quaternion.multiply(this.quat);
-     
-     
-     };*/
-
-    this.hitCol = function (collided) {
-        for (i = 0; i < this.ammoNumber; ++i) {
-
-            if (this.ammo[i].fired === false) {
-                this.ammo[i].cube.position.copy(new THREE.Vector3().setFromMatrixPosition(this.barrelMesh.matrixWorld));
-                this.ammo[i].cube.visible = true;
-                this.ammo[i].fired = true;
-                this.ammo[i].toTarget = true;
-                this.ammo[i].target = collided.object;
-                this.ammo[i].goal.copy(collided.point);
-                break;
-            }
-        }
-        this.hit = true;
-        this.fireGun = true;
-        ///
-        //var removeCol = colliders.indexOf(collided.object);
-        //colliders.splice(removeCol, 1);
-    };
-
-    this.fire = function (direction) {
-        for (i = 0; i < this.ammoNumber; ++i) {
-
-            if (this.ammo[i].fired === false) {
-                console.log(i + ' fired');
-                this.ammo[i].cube.position.copy(new THREE.Vector3().setFromMatrixPosition(this.barrelMesh.matrixWorld));
-                this.ammo[i].cube.visible = true;
-                this.ammo[i].fired = true;
-                this.ammo[i].goal.copy(direction);
-                break;
-            }
-        }
-        this.fireDistance = 0.0;
-        this.fireGun = true;
-    };
-
 }
+
 Tank.prototype = entityProto;
