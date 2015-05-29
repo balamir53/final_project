@@ -1,4 +1,4 @@
-/* 
+ /* 
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -134,6 +134,7 @@ function onDocumentMouseDown(event) {
         //console.log(intersects[0].point.x + "---" + intersects[0].point.z);
         for (i = 0; i < tanks.length; ++i) {
             tanks[i].selectMesh.visible = false;
+            tanks[i].line.visible = false;
             if (tanks[i].chassisMesh === intersects[0].object) {
                 tank = tanks[i];
                 tank.selectMesh.visible = true;
@@ -141,7 +142,7 @@ function onDocumentMouseDown(event) {
                 //setTimeout(function () {
                 //    tank.selectMesh.visible = false;
                 //}, 1000);
-                break;
+                //break;
             }
         }
 
@@ -153,7 +154,7 @@ function onDocumentMouseDown(event) {
             tank.wayPoints.push(planeIntersects[0].point);
             //tank.line.geometry.vertices[tank.wayPoints.length] = planeIntersects[0].point;
             //tank.line.geometry.verticesNeedUpdate = true;
-            console.log(tank.wayPoints.length);
+            //console.log(tank.wayPoints.length);
             this.wayPointsClicked += 1;
             
 
@@ -169,7 +170,7 @@ function onDocumentMouseDown(event) {
                 //tank.line.geometry.vertices[1] = planeIntersects[0].point;
                 //tank.line.geometry.verticesNeedUpdate = true;
                 tank.wayPoints.push(planeIntersects[0].point);
-                console.log(tank.wayPoints.length);
+                //console.log(tank.wayPoints.length);
 
 
             }

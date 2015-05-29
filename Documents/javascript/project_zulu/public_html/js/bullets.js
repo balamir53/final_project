@@ -19,7 +19,7 @@ function Ammos(id) {
     var onGeometry = function (geom, mats) {
         that.cube = new THREE.Mesh(geom, new THREE.MeshFaceMaterial(mats));
         that.cube.visible = false;
-        that.cube.scale.set(.1, .1, .1);
+        that.cube.scale.set(.3, .3, .3);
         //that.cube.useQuaternion = true;
         scene.add(that.cube);
     };
