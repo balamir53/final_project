@@ -543,7 +543,7 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
             terminalSpeed: 20
         });
     }
-    THREE.ImageUtils.loadTexture("images/smoke.png", undefined, particlesLoaded);
+    THREE.ImageUtils.loadTexture("images/smoke1.png", undefined, particlesLoaded);
 
     //shooting path
     this.curve = new THREE.QuadraticBezierCurve3(
@@ -581,6 +581,7 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
     this.hit = function (position) {
         this.blastCloud.cloud.position.copy(position);
         this.blastCloud.cloud.visible = true;
+        this.blastCloud.addForce(new THREE.Vector3(0, 40, 0));
         this.blastCloud.start();
 
         var that = this;

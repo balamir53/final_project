@@ -26,7 +26,7 @@ function initTerrain() {
         terrainUniforms.tSplat2.value = THREE.ImageUtils.loadTexture("images/grass-and-rock.png");
         terrainUniforms.tSplat3.value = THREE.ImageUtils.loadTexture("images/snow.png");
         terrainUniforms.tSplat4.value = THREE.ImageUtils.loadTexture("images/SUNNY-Mottled-Stone-and-Dirt.png");
-        terrainUniforms.tAlphaMap.value = THREE.ImageUtils.loadTexture("images/splat.png");
+        terrainUniforms.tAlphaMap.value = THREE.ImageUtils.loadTexture("images/splat1.png");
 
 
         terrainMaterial = new THREE.TerrainMaterial({

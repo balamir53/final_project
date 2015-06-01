@@ -102,14 +102,27 @@ and open the template in the editor.
                 myCanvas.addEventListener('mousedown', onDocumentMouseDown, false);
                 window.onkeydown = onKeyDown;
                 window.onkeyup = onKeyUp;	
-
+                
+//                var loadTrees = function(loaded){
+////                    var loadTrees = function(geom,mats){
+//                    for(var i=0 ; i<loaded.children.length; ++i){
+//                        scene.add(loaded.children[i]);
+//                    }
+////var tree = new THREE.Mesh(geom,new THREE.MeshFaceMaterial(mats));
+////scene.add(tree);
+//                    
+//                    
+//                }
+//                var loader = new THREE.ObjectLoader();
+////                var loader = new THREE.JSONLoader();
+//                loader.load("models/terrain/trees.json", loadTrees);
 
 
                 //create tanks and add them to collider to be selectable
                 var loader = new THREE.JSONLoader();
                 
                 //reds
-                new Howitzer('red', scene, new THREE.Vector3(1.96, 180.39, -180.39), loader,  entitiesBoundingBox);
+                new Howitzer('red', scene, new THREE.Vector3(9.8, 46.07, -137.25), loader,  entitiesBoundingBox);
                 new Howitzer('red', scene, new THREE.Vector3(-17.65, 48.32, -180.39), loader, entitiesBoundingBox);
                 new Howitzer('red', scene, new THREE.Vector3(21.57, 48.49, -164.71), loader, entitiesBoundingBox);
                 new Howitzer('red', scene, new THREE.Vector3(-21.57, 47.54, -152.94), loader, entitiesBoundingBox);
