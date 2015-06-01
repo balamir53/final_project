@@ -1,4 +1,4 @@
- /* 
+/* 
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -12,9 +12,17 @@ var mouse, raycaster, plane;
 var geometry, material, cube;
 var tank, tank01, tank02, tank03;
 var tanks = [];
-var entitiesCollider = [];
+//var entitiesCollider = [];
 var myCanvas, w, h;
 var shiftPressed = false;
+var entitiesBoundingBox = [];
+
+var collisions1, earthLevel;
+
+var pointFront = new THREE.Vector3();
+var toEarth = new THREE.Vector3(0, -1, 0);
+var pointUp = new THREE.Vector3();
+
 
 var hitProb = {
     'tank': {'tank': .8, 'art': .9, 'inf': .5}
@@ -24,8 +32,10 @@ var hitProb = {
 var terrainType = {
     0: 1,
     1: 2,
-    2: 0
+    2: 0,
+    3: .5
 };
+
 
 var initScene = function () {
     myCanvas = document.getElementsByTagName("canvas")[0];
@@ -35,7 +45,7 @@ var initScene = function () {
 
     renderer = new THREE.WebGLRenderer({canvas: myCanvas});
     renderer.setSize(w, h);
-    renderer.setClearColor(0xffffff);
+    renderer.setClearColor(0x777777);
 
     scene = new THREE.Scene();
 
@@ -120,7 +130,8 @@ function onDocumentMouseDown(event) {
     mouse.set((event.pageX / w) * 2 - 1, -(event.pageY / h) * 2 + 1);
     raycaster.setFromCamera(mouse, camera);
     var planeIntersects = raycaster.intersectObjects(objects);
-    var intersects = raycaster.intersectObjects(entitiesCollider);
+//    var intersects = raycaster.intersectObjects(entitiesCollider);
+    var intersects = raycaster.intersectObjects(entitiesBoundingBox);
 
     if (event.button === 2) {
         tank = null;
@@ -135,10 +146,11 @@ function onDocumentMouseDown(event) {
         for (i = 0; i < tanks.length; ++i) {
             tanks[i].selectMesh.visible = false;
             tanks[i].line.visible = false;
-            if (tanks[i].chassisMesh === intersects[0].object) {
+            if (tanks[i].chassisMesh === intersects[0].object.object) {
                 tank = tanks[i];
                 tank.selectMesh.visible = true;
-                tank.line.visible = true;
+                tank.line.visible = controller.wayPoints;
+                console.log("tank" + tank.id + " selected");
                 //setTimeout(function () {
                 //    tank.selectMesh.visible = false;
                 //}, 1000);
@@ -150,13 +162,13 @@ function onDocumentMouseDown(event) {
     else if (shiftPressed && planeIntersects.length > 0 && event.button === 0) {
         if (tank) {
             //console.log('looo');
-            
+
             tank.wayPoints.push(planeIntersects[0].point);
             //tank.line.geometry.vertices[tank.wayPoints.length] = planeIntersects[0].point;
             //tank.line.geometry.verticesNeedUpdate = true;
             //console.log(tank.wayPoints.length);
             this.wayPointsClicked += 1;
-            
+
 
         }
     }

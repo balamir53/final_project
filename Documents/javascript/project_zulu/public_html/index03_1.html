@@ -10,28 +10,42 @@ and open the template in the editor.
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src="js/dat.gui.min.js"></script>
         <script type="text/javascript" src="js/orbitControls.js"></script>
         <script type="text/javascript" src="js/physicsUtil.js"></script>
+        <script type="text/javascript" src="js/spriteParticleSystem.js"></script>
+        <script type="text/javascript" src="js/TerrainShaders.js"></script>
+        <script type="text/javascript" src="js/TerrainMaterial.js"></script>
+        <script type="text/javascript" src="js/terrain.js"></script>
         <script type="text/javascript" src="js/zee_1.js"></script>
         <script type="text/javascript" src="js/bullets.js"></script>
         <script type="text/javascript" src="js/entities_1.js"></script>
+        <script type="text/javascript" src="js/menu.js"></script>
 
 
         <script type="text/javascript">
+            
+
             // global variables are in zee.js 
             var init = function () {
 
                 initScene();
+                initTerrain();
+                
+                //gui
+                var gui = new dat.GUI();
+                controller.init(gui);
+                
                 camera.position.set(120, 70, 130);
                 camera.lookAt(new THREE.Vector3());
-                controls = new THREE.OrbitControls(camera);
+                controls = new THREE.OrbitControls(camera,myCanvas);
 
                 //green cube for visual testing
-                geometry = new THREE.BoxGeometry(5, 5, 5);
-                material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-                cube = new THREE.Mesh(geometry, material);
-                cube.material.wireframe = true;
-                scene.add(cube);
+//                geometry = new THREE.BoxGeometry(5, 5, 5);
+//                material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+//                cube = new THREE.Mesh(geometry, material);
+//                cube.material.wireframe = true;
+//                scene.add(cube);
 
 
                 // raycaster and plane
@@ -46,8 +60,8 @@ and open the template in the editor.
         //objects.push(line);
 
                 //imported plane
-                var onGeometry = function (geom, mats) {
-                    plane = new THREE.Mesh(geom, new THREE.MeshFaceMaterial(mats));
+//                var onGeometry = function (geom, mats) {
+//                    plane = new THREE.Mesh(geom, new THREE.MeshFaceMaterial(mats));
                     //ground.position.y = -.5;
                     //ground.scale.x *= 50;
                     //ground.scale.z *= 50;
@@ -66,13 +80,14 @@ and open the template in the editor.
                     // If you don't compute new scale bounding sphere, the mesh disappears on some frames.
                    // ground.geometry.computeBoundingSphere();
                    // ground.visible = false;
-                    scene.add(plane);
-                    objects.push(plane);
+//                    scene.add(plane);
+//                    objects.push(plane);
                     //PhysicsUtil.createCollisionShape(ground, 0, 'plane', 0x00FF00, dynamicsWorld, false);
 
-                };
-                //new THREE.JSONLoader().load("models/terrain/plane.json", onGeometry);
-                new THREE.JSONLoader().load("models/terrain/plane2.json", onGeometry);
+//                };
+//                new THREE.JSONLoader().load("models/terrain/plane.json", onGeometry);
+                //new THREE.JSONLoader().load("models/terrain/plane2.json", onGeometry);
+                //new THREE.JSONLoader().load("models/terrain/plane3.json", onGeometry);
 
                 // Lights
 
@@ -84,7 +99,7 @@ and open the template in the editor.
                 scene.add(directionalLight);
 
                 //document.addEventListener('mousemove', onDocumentMouseMove, false);
-                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                myCanvas.addEventListener('mousedown', onDocumentMouseDown, false);
                 window.onkeydown = onKeyDown;
                 window.onkeyup = onKeyUp;	
 
@@ -92,17 +107,24 @@ and open the template in the editor.
 
                 //create tanks and add them to collider to be selectable
                 var loader = new THREE.JSONLoader();
-                tank01 = new Howitzer('blue', scene, new THREE.Vector3(-10, 0, 95), loader,  entitiesCollider, Math.PI);
-                tank02 = new Tank('red', scene, new THREE.Vector3(-7.15, 24.68, -85.71), loader, entitiesCollider);
-                tank03 = new Tank('blue', scene, new THREE.Vector3(10, 0, 95), loader, entitiesCollider, Math.PI);
-                var temp = [];
-                tankRed = new Howitzer('red', scene, new THREE.Vector3(7.15, 24.68, -85.71), loader,  entitiesCollider);
-                tanks.push(tank01, tank02, tank03, tankRed);
+                
+                //reds
+                new Howitzer('red', scene, new THREE.Vector3(1.96, 180.39, -180.39), loader,  entitiesBoundingBox);
+                new Howitzer('red', scene, new THREE.Vector3(-17.65, 48.32, -180.39), loader, entitiesBoundingBox);
+                new Howitzer('red', scene, new THREE.Vector3(21.57, 48.49, -164.71), loader, entitiesBoundingBox);
+                new Howitzer('red', scene, new THREE.Vector3(-21.57, 47.54, -152.94), loader, entitiesBoundingBox);
+                //blues
+                new Howitzer('blue', scene, new THREE.Vector3(-49, 0,133), loader,  entitiesBoundingBox, Math.PI);
+                new Howitzer('blue', scene, new THREE.Vector3(-42, 0,164), loader,  entitiesBoundingBox, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(2, 0, 168), loader, entitiesBoundingBox, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(-13, 0, 130), loader, entitiesBoundingBox, Math.PI);
+                
 
-                var boxGeo = new THREE.BoxGeometry(.5, .5, .5);
-                var boxMat = new THREE.MeshBasicMaterial({color: 0X00ff00});
-                box = new THREE.Mesh(boxGeo, boxMat);
-                scene.add(box);
+
+//                var boxGeo = new THREE.BoxGeometry(.5, .5, .5);
+//                var boxMat = new THREE.MeshBasicMaterial({color: 0X00ff00});
+//                box = new THREE.Mesh(boxGeo, boxMat);
+//                scene.add(box);
 
                 var clock = new THREE.Clock();
 
