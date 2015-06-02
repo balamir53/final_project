@@ -10,8 +10,8 @@ var entityProto = {
     minDistance: Infinity,
     distance: null,
     localVariable: null,
-    ray : new THREE.Raycaster(),
-    ray1 : new THREE.Raycaster(),
+    ray: new THREE.Raycaster(),
+    ray1: new THREE.Raycaster(),
     init: function () {
 
         this.id = this.nextID;
@@ -80,7 +80,7 @@ var entityProto = {
         THREE.ImageUtils.loadTexture("images/smoke.png", undefined, particlesLoaded);
 
 
-tanks.push(this);
+        tanks.push(this);
 
     },
     loadModel: function (model00Url, model00Pos, model01Url, model01Pos, model02Url, model02Pos, scene, yRotation, collid) {
@@ -112,7 +112,10 @@ tanks.push(this);
             scene.add(that.chassisMesh);
 
             //parent = that.chassisMesh;
-            loader.load(model01Url, onGeometryTurret);
+            if (that.side === 'red')
+                loader.load(model01Url, onGeometryTurret, "models/tank/red");
+            else
+                loader.load(model01Url, onGeometryTurret);
             loader.load("models/tank/selected.json", onGeometrySel);
         };
         var onGeometryTurret = function (geom, mats) {
@@ -121,8 +124,12 @@ tanks.push(this);
 
             //that.turretMesh.position.set(0.00734,-0.63025,1.17879);
             that.turretMesh.position.set(model01Pos.x, model01Pos.y, model01Pos.z);
-            if (model02Url)
-                loader.load(model02Url, onGeometryBarrel);
+            if (model02Url) {
+                if (that.side === 'red')
+                    loader.load(model02Url, onGeometryBarrel, "models/tank/red");
+                else
+                    loader.load(model02Url, onGeometryBarrel);
+            }
         };
         var onGeometryBarrel = function (geom, mats) {
             that.barrelMesh = new THREE.Mesh(geom, new THREE.MeshFaceMaterial(mats));
@@ -144,8 +151,10 @@ tanks.push(this);
             that.selectMesh.visible = false;
             that.chassisMesh.add(that.selectMesh);
         };
-
-        loader.load(model00Url, onGeometry);
+        if (this.side === 'red')
+            loader.load(model00Url, onGeometry, "models/tank/red");
+        else
+            loader.load(model00Url, onGeometry);
 
 
     },
@@ -194,10 +203,10 @@ tanks.push(this);
         ;
 
         // the point in front of the entity
-        pointFront.set(0,.4,2);
+        pointFront.set(0, .4, 2);
         this.mesh.localToWorld(pointFront);
         //the vector down
-        
+
         this.ray.set(pointFront, toEarth);
         collisions1 = this.ray.intersectObject(plane);
         //to visualize the front point
@@ -207,7 +216,7 @@ tanks.push(this);
 
         //the point above the entity mesh
         pointUp.copy(this.mesh.position);
-        pointUp.setY(this.mesh.position.y+10);
+        pointUp.setY(this.mesh.position.y + 10);
         this.ray1.set(pointUp, toEarth);
         earthLevel = this.ray1.intersectObject(plane);
 
@@ -248,7 +257,7 @@ tanks.push(this);
         this.mesh.translateZ(dt * this.speed * terrainType[this.terrainMaterial] * this.normalY * this.intersectsEntity);
         if (earthLevel[0])
             this.mesh.position.y = earthLevel[0].point.y;
-        
+
 
     },
     chooseAmmo: function () {
@@ -285,7 +294,7 @@ tanks.push(this);
 
         this.cloud.cloud.visible = false;
         this.cloud.stop();
-        
+
         this.localVariable = entitiesBoundingBox.indexOf(this.boundingBox);
         if (this.localVariable !== -1)
             ;
@@ -428,7 +437,7 @@ function Tank(side, scene, loc, loader, collid, yRotation) {
     this.damage = 25;
 
     this.ammo = [];
-    this.ammoNumber = 1;
+    this.ammoNumber = 2;
 
     for (i = 0; i < this.ammoNumber; ++i) {
         this.ammo.push(new Ammos(i));
@@ -566,7 +575,7 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
 
     //this.hit = false;
     this.ammo = [];
-    this.ammoNumber = 1;
+    this.ammoNumber = 2;
 
     for (i = 0; i < this.ammoNumber; ++i) {
         this.ammo.push(new Ammos(i));

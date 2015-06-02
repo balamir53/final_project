@@ -144,14 +144,14 @@ and open the template in the editor.
                 var renderLoop = function () {
                     //// try
                     //tank = tank02;
-
+                    
                     var dt = clock.getDelta();
+                    
+                    if(!controller.pause){
                     for (i = 0; i < tanks.length; ++i) {
                         tanks[i].update(dt);
                     }
-                    ////////////////// incoming mado scientisto
-                    //var zee = new THREE.Vector3(0,.9,2);
-
+                }
 
 
                     controls.update();
