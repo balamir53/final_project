@@ -9,6 +9,38 @@ and open the template in the editor.
         <title>project_zulu</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <style>
+            onepix-imgloader {
+
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                //display:block;
+                z-index: 1000;
+            }
+
+            /*hide the second element in the loading container (first element is the leading img)*/
+            .loading-container > *:not(.onepix-imgloader) {
+                filter:alpha(opacity=0);
+                -moz-opacity:0;
+                -khtml-opacity:0;
+                opacity:0;
+            }
+
+            .loading-container {
+                position: relative;
+                background: #ffffff;
+                min-height: 40px;
+                height: 95%;
+
+            }
+
+            #container {
+                /*    min-width: 400px;*/
+                min-height: 400px;
+            }
+        </style>
         <script type="text/javascript" src="js/three.js"></script>
         <script type="text/javascript" src="js/dat.gui.min.js"></script>
         <script type="text/javascript" src="js/orbitControls.js"></script>
@@ -16,29 +48,78 @@ and open the template in the editor.
         <script type="text/javascript" src="js/spriteParticleSystem.js"></script>
         <script type="text/javascript" src="js/TerrainShaders.js"></script>
         <script type="text/javascript" src="js/TerrainMaterial.js"></script>
+        <script type="text/javascript" src="js/skyShader.js"></script>
         <script type="text/javascript" src="js/terrain.js"></script>
+        <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="js/heartcode-canvasloader-min.js"></script>
         <script type="text/javascript" src="js/zee_1.js"></script>
         <script type="text/javascript" src="js/bullets.js"></script>
         <script type="text/javascript" src="js/entities_1.js"></script>
         <script type="text/javascript" src="js/menu.js"></script>
+        <script type="text/javascript" src="js/stats.min.js"></script>
+
+
+
 
 
         <script type="text/javascript">
-            
+
+
 
             // global variables are in zee.js 
             var init = function () {
 
+
+
                 initScene();
+                initSky();
+
+                //new experiment
+                //to display loading animation before it's ready
+                $(document).ready(function () {
+                    if ($('.loading-container').length) {
+
+                        //to show loading animation
+                        $imgloader = $('.loading-container');
+                        $loadingimg = $('<div id="canvasloader-container" class="onepix-imgloader"></div>');
+
+//          $loadingimg.attr("src","images/flexslider/loading.gif");
+                        $imgloader.prepend($loadingimg);
+
+//          canvasloader code
+                        var cl = new CanvasLoader('canvasloader-container');
+                        cl.setColor('#00bbff'); // default is '#000000'
+                        cl.setShape('spiral');
+                        cl.setDiameter(45); // default is 40
+                        cl.setDensity(75); // default is 40
+                        cl.setRange(0.7); // default is 1.3
+                        cl.setSpeed(3); // default is 2
+                        cl.setFPS(22); // default is 24
+                        cl.show(); // Hidden by default
+
+                    }
+
+                });
                 initTerrain();
-                
+                var container = document.getElementById('container');
+                //stats
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.bottom = '0px';
+                //stats.domElement.style.zIndex = 100;
+                container.appendChild(stats.domElement);
+
                 //gui
                 var gui = new dat.GUI();
                 controller.init(gui);
-                
-                camera.position.set(120, 70, 130);
+                cameraDefaultPos = new THREE.Vector3(-106, 70, 300);
+                camera.position.copy(cameraDefaultPos);
                 camera.lookAt(new THREE.Vector3());
-                controls = new THREE.OrbitControls(camera,myCanvas);
+                controls = new THREE.OrbitControls(camera, myCanvas);
+                controls.maxDistance = 5000.0;
+                controls.maxPolarAngle = Math.PI * 0.495;
+                controls.noPan = true;
+//                controls.userPanSpeed = 0.0;
 
                 //green cube for visual testing
 //                geometry = new THREE.BoxGeometry(5, 5, 5);
@@ -53,36 +134,36 @@ and open the template in the editor.
                 raycaster = new THREE.Raycaster();
                 mouse = new THREE.Vector2();
 
-            
-        //scene.add(plane);
-          //      objects.push(plane);
-        
-        //objects.push(line);
+
+                //scene.add(plane);
+                //      objects.push(plane);
+
+                //objects.push(line);
 
                 //imported plane
 //                var onGeometry = function (geom, mats) {
 //                    plane = new THREE.Mesh(geom, new THREE.MeshFaceMaterial(mats));
-                    //ground.position.y = -.5;
-                    //ground.scale.x *= 50;
-                    //ground.scale.z *= 50;
-                    //ground.transparent = true;
-                    //ground.opacity = .5;
-                    //ground.matrixAutoUpdate = false;
+                //ground.position.y = -.5;
+                //ground.scale.x *= 50;
+                //ground.scale.z *= 50;
+                //ground.transparent = true;
+                //ground.opacity = .5;
+                //ground.matrixAutoUpdate = false;
 //                    var texture = THREE.ImageUtils.loadTexture("models/terrain/Beach_sand_pxr128.png");
 //                    texture.wrapS = THREE.RepeatWrapping;
 //                    texture.wrapT = THREE.RepeatWrapping;
 //                    texture.repeat.set(50, 50);
 //                    ground.material.materials[0].map = texture;
-                    //ground.material.materials[0].side = THREE.DoubleSide;
-                    //applyScaleFix(ground);
-                   // ground.receiveShadow = true;
-                    //ground.frustrumCulled = false;
-                    // If you don't compute new scale bounding sphere, the mesh disappears on some frames.
-                   // ground.geometry.computeBoundingSphere();
-                   // ground.visible = false;
+                //ground.material.materials[0].side = THREE.DoubleSide;
+                //applyScaleFix(ground);
+                // ground.receiveShadow = true;
+                //ground.frustrumCulled = false;
+                // If you don't compute new scale bounding sphere, the mesh disappears on some frames.
+                // ground.geometry.computeBoundingSphere();
+                // ground.visible = false;
 //                    scene.add(plane);
 //                    objects.push(plane);
-                    //PhysicsUtil.createCollisionShape(ground, 0, 'plane', 0x00FF00, dynamicsWorld, false);
+                //PhysicsUtil.createCollisionShape(ground, 0, 'plane', 0x00FF00, dynamicsWorld, false);
 
 //                };
 //                new THREE.JSONLoader().load("models/terrain/plane.json", onGeometry);
@@ -101,8 +182,8 @@ and open the template in the editor.
                 //document.addEventListener('mousemove', onDocumentMouseMove, false);
                 myCanvas.addEventListener('mousedown', onDocumentMouseDown, false);
                 window.onkeydown = onKeyDown;
-                window.onkeyup = onKeyUp;	
-                
+                window.onkeyup = onKeyUp;
+
 //                var loadTrees = function(loaded){
 ////                    var loadTrees = function(geom,mats){
 //                    for(var i=0 ; i<loaded.children.length; ++i){
@@ -119,19 +200,19 @@ and open the template in the editor.
 
 
                 //create tanks and add them to collider to be selectable
-                var loader = new THREE.JSONLoader();
-                
+                //var loader = new THREE.JSONLoader(manager);
+
                 //reds
-                new Howitzer('red', scene, new THREE.Vector3(9.8, 46.07, -137.25), loader,  entitiesBoundingBox);
-                new Howitzer('red', scene, new THREE.Vector3(-17.65, 48.32, -180.39), loader, entitiesBoundingBox);
-                new Howitzer('red', scene, new THREE.Vector3(21.57, 48.49, -164.71), loader, entitiesBoundingBox);
-                new Howitzer('red', scene, new THREE.Vector3(-21.57, 47.54, -152.94), loader, entitiesBoundingBox);
+                new Howitzer('red', scene, new THREE.Vector3(9.8, 46.07, -137.25), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(-17.65, 48.32, -180.39), manager, entitiesBoundingBox, selectables);
+                new Tank('red', scene, new THREE.Vector3(21.57, 48.49, -164.71), manager, entitiesBoundingBox, selectables);
+                new Tank('red', scene, new THREE.Vector3(-21.57, 47.54, -152.94), manager, entitiesBoundingBox, selectables);
                 //blues
-                new Howitzer('blue', scene, new THREE.Vector3(-49, 0,133), loader,  entitiesBoundingBox, Math.PI);
-                new Howitzer('blue', scene, new THREE.Vector3(-42, 0,164), loader,  entitiesBoundingBox, Math.PI);
-                new Tank('blue', scene, new THREE.Vector3(2, 0, 168), loader, entitiesBoundingBox, Math.PI);
-                new Tank('blue', scene, new THREE.Vector3(-13, 0, 130), loader, entitiesBoundingBox, Math.PI);
-                
+                new Howitzer('blue', scene, new THREE.Vector3(-49, 0, 133), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Infantry('blue', scene, new THREE.Vector3(-42, 0, 164), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Infantry('blue', scene, new THREE.Vector3(2, 0, 168), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(-13, 0, 130), manager, entitiesBoundingBox, selectables, Math.PI);
+
 
 
 //                var boxGeo = new THREE.BoxGeometry(.5, .5, .5);
@@ -142,20 +223,27 @@ and open the template in the editor.
                 var clock = new THREE.Clock();
 
                 var renderLoop = function () {
+                    stats.begin();
                     //// try
                     //tank = tank02;
-                    
+
                     var dt = clock.getDelta();
-                    
-                    if(!controller.pause){
+
                     for (i = 0; i < tanks.length; ++i) {
-                        tanks[i].update(dt);
+                        tanks[i].updateLines(dt);
                     }
-                }
+
+                    if (!controller.pause) {
+                        for (i = 0; i < tanks.length; ++i) {
+                            tanks[i].update(dt);
+                        }
+                        sunUpdate(dt);
+                    }
 
 
                     controls.update();
                     renderer.render(scene, camera);
+                    stats.end();
                     requestAnimationFrame(renderLoop);
                 };
 
@@ -163,9 +251,15 @@ and open the template in the editor.
 
             };
             window.onload = init;
+
         </script>
     </head>
     <body>
-        <canvas style="width:100%;height:95%;border:1px gray solid;"></canvas>
+        <div class = "loading-container" >
+            <div id="container">    
+                <canvas style="width:100%;height:95%;border:1px gray solid;"></canvas>
+            </div>
+        </div>
+
     </body>
 </html>

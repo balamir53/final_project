@@ -12,11 +12,24 @@ var controller = {
     ballisticTrajectory: false,
     healthBar: true,
     pause : false,
+    enemyBehavior:0,
+    zoomToUnit:false,
+    stopUnit : function(){
+        tank.wayPoints =[];
+       
+    },
+    resetAllWaypoints :function(){
+        for (var i=0; i<tanks.length;++i){
+            tanks[i].wayPoints = [];
+            //tanks[i].wayPoints.goal = tanks.pos;
+        }
+    },
     
 
     init: function (gui) {
         var v1 = gui.addFolder('Visualization');
         var v2 = gui.addFolder('Game Control');
+        var that = this;
         
         v1.add(controller, "wayPoints");
         v1.add(controller, "boundingBoxes");
@@ -24,6 +37,24 @@ var controller = {
         v1.add(controller, "healthBar");
         
         v2.add(controller, "pause");
+        v2.add(controller, "stopUnit");
+        v2.add(controller, "resetAllWaypoints");
+        v2.add(controller,"zoomToUnit").onChange(function(){
+            if(controller.zoomToUnit&&tank){
+                camera.position.copy(tank.mesh.localToWorld(new THREE.Vector3(0,30,-60)));
+                camera.lookAt(tank.mesh.localToWorld(new THREE.Vector3(0,0,30)));
+            }else {camera.position.copy(cameraDefaultPos); camera.lookAt(new THREE.Vector3());
+            }
+        });
+        v2.add(controller,"enemyBehavior",{defensive:0,aggressive:1}).onChange(function(){
+            if(controller.enemyBehavior==="0"){
+            
+            for(var i =0; i<tanks.length;++i){
+                if(tanks[i].side==="red")
+                    tanks[i].goal=tanks[i].pos;           }
+                   }
+        })
+        ;
 
         gui.close();
     }

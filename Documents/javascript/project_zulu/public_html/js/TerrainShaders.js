@@ -18,6 +18,25 @@ terrainUniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib[ "fog" ],
     THREE.UniformsLib[ "lights" ]
 ]);
+var terrainUniforms1 = {
+    tAlphaMap: { type: "t", value: null },
+    tSplat1: { type: "t", value: null },
+    tSplat2: { type: "t", value: null },
+    tSplat3: { type: "t", value: null },
+    tSplat4: { type: "t", value: null },
+    uSplat1Repeat: { type: "v2", value: new THREE.Vector2(100.0, 100.0) },
+    uSplat2Repeat: { type: "v2", value: new THREE.Vector2(800.0, 600.0) },
+    uSplat3Repeat: { type: "v2", value: new THREE.Vector2(1000.0, 1000.0) },
+    uSplat4Repeat: { type: "v2", value: new THREE.Vector2(100.0, 100.0) },
+    shininess: { type: "f", value: 32.0 },
+    specularStrength: { type: "f", value: 0.2 }
+};
+
+terrainUniforms1 = THREE.UniformsUtils.merge([
+    terrainUniforms,
+    THREE.UniformsLib[ "fog" ],
+    THREE.UniformsLib[ "lights" ]
+]);
 
 var terrainVertexShader = [
 

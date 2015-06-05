@@ -10,6 +10,8 @@ var entityProto = {
     minDistance: Infinity,
     distance: null,
     localVariable: null,
+    minRange: 0,
+    isAttackedBy: null,
     ray: new THREE.Raycaster(),
     ray1: new THREE.Raycaster(),
     init: function () {
@@ -69,24 +71,26 @@ var entityProto = {
                 num: 30,
                 texture: mapA,
                 //scaleR:[0.1,.2],
-                scaleR: [0.005, .03],
+                scaleR: [0.01, .05],
                 speedR: [0, 0.5],
                 rspeedR: [-0.1, 0.3],
                 lifespanR: [1, 4],
                 terminalSpeed: 20
             });
+//            that.cloud.addForce(new THREE.Vector3(0, 20, 0));
         }
 
-        THREE.ImageUtils.loadTexture("images/smoke.png", undefined, particlesLoaded);
+        THREE.ImageUtils.loadTexture("images/tank_explode.png", undefined, particlesLoaded);
 
 
         tanks.push(this);
 
     },
-    loadModel: function (model00Url, model00Pos, model01Url, model01Pos, model02Url, model02Pos, scene, yRotation, collid) {
+    loadModel: function (model00Url, model00Pos, model01Url, model01Pos, model02Url, model02Pos, scene, yRotation, collid, manager, selectables,barrelCloud) {
 
         var that = this;
         var loader = new THREE.JSONLoader();
+        loader.imageLoader = new THREE.ImageLoader(manager);
 
         var onGeometry = function (geom, mats) {
 
@@ -96,6 +100,7 @@ var entityProto = {
                 that.chassisMesh.rotation.y = yRotation;
             that.chassisMesh.castShadow = true;
             that.mesh = that.chassisMesh;
+//            that.boundingBox = new THREE.BoundingBoxHelper(that.mesh, 0xff0000);
             that.boundingBox = new THREE.BoundingBoxHelper(that.mesh, 0xff0000);
             //that.boundingBox.update();
             scene.add(that.boundingBox);
@@ -108,6 +113,8 @@ var entityProto = {
             that.wayPoints.push(that.pos);
 //        collid.push(that.chassisMesh);
             collid.push(that.boundingBox);
+            if (that.side === "blue")
+                selectables.push(that.boundingBox);
 
             scene.add(that.chassisMesh);
 
@@ -136,6 +143,9 @@ var entityProto = {
             //that.barrelMesh.position.set(0,1.46306-1.50835,0.64304);
             that.barrelMesh.position.set(model02Pos.x, model02Pos.y, model02Pos.z);
             that.turretMesh.add(that.barrelMesh);
+            if (barrelCloud){
+            barrelCloud.position.set(0,0,2);
+            that.barrelMesh.add(barrelCloud);}
             //var myCamera = camera;
             //that.barrelMesh.add(myCamera);
             //myCamera.position.set(0, 2, -10);
@@ -159,28 +169,45 @@ var entityProto = {
 
     },
     getClosestTarget: function () {
+        if (this.isAttackedBy && tanks[this.isAttackedBy - 1].state === "dead")
+            this.isAttackedBy = null;
         this.minDistance = Infinity;
         this.target = null;
-        for (var tank in tanks) {
-            if (!tanks[tank].mesh)
+        for (var i = 0; i < tanks.length; ++i) {
+            if (!tanks[i].mesh)
                 break;
-            this.distance = this.pos.distanceTo(tanks[tank].pos);
-            //if(!tanks[tank]) return;
-            if (tanks[tank].pos && tanks[tank].state !== 'dead'
-                    && tanks[tank].side !== this.side
-                    && this.distance < this.range
-                    && this.distance < this.minDistance
-                    ) {
-
-                //console.log('aha');
-                this.target = tanks[tank];
+            if (tanks[i].side === this.side || tanks[i].type !== this.type || tanks[i].state === 'dead')
+                continue;
+            this.distance = this.pos.distanceTo(tanks[i].pos);
+            if (this.distance < this.range && this.distance >this.minRange && this.minDistance>this.distance) {
+                this.target = tanks[i];
                 this.state = 'engaged';
                 this.minDistance = this.distance;
-            }//else this.target = null;
+            }
+
         }
+        if (!this.target) {
+            this.minDistance = Infinity;
+            for (var i = 0; i < tanks.length; ++i) {
+                if (!tanks[i].mesh)
+                    break;
+                this.distance = this.pos.distanceTo(tanks[i].pos);
+                if (tanks[i].side === this.side || tanks[i].state === 'dead')
+                    continue;
+                if (this.distance < this.range && this.distance > this.minRange && this.minDistance>this.distance) {
+                    this.target = tanks[i];
+                    this.state = 'engaged';
+                    this.minDistance = this.distance;
+                }
+
+            }
+        }
+
         if (this.target === null) {
             this.state = 'idle';
             lookTowards(this.turretMesh, new THREE.Vector3(0, 1.18, 10), .01);
+            if(this.type==="how")
+            lookTowards(this.barrelMesh, new THREE.Vector3(0, 1.18, 10), .01);
         }
 
     },
@@ -260,6 +287,40 @@ var entityProto = {
 
 
     },
+    updateLines: function (dt) {
+        if (!this.selectMesh || this.state === "dead")
+            return;
+        if (this.selectMesh.visible)
+            this.line.visible = controller.wayPoints;
+        else this.line.visible = false;
+        var lineHeight = 2;
+        var vectora = this.pos.clone();
+        vectora.y = vectora.y + lineHeight;
+        if (this.wayPoints[0]) {
+
+            this.line.geometry.vertices[0] = vectora;
+            for (var i = 0; i < this.wayPoints.length; ++i) {
+                var vector = this.wayPoints[i].clone();
+                vector.y = vector.y + lineHeight;
+                this.line.geometry.vertices[i + 1] = vector;
+            }
+
+            for (var i = 0; i < 9 - this.wayPoints.length; ++i) {
+                var vector = this.wayPoints[this.wayPoints.length - 1].clone();
+                vector.y = vector.y + lineHeight;
+                this.line.geometry.vertices[9 - i] = vector;
+                //this.line.geometry.vertices[this.wayPointsClicked - this.wayPoints.length -1 ] = this.pos;
+
+            }
+
+        } else {
+            for (var i = 0; i < 10; ++i) {
+                this.line.geometry.vertices[i] = vectora;
+            }
+
+        }
+        this.line.geometry.verticesNeedUpdate = true;
+    },
     chooseAmmo: function () {
         for (var i = 0; i < this.ammoNumber; ++i) {
             if (this.ammo[i].fired === false) {
@@ -272,23 +333,13 @@ var entityProto = {
 
     },
     hit: function (target) {
-        console.log("ateeees" + this.id);
 
-        target.cloud.cloud.position.copy(target.pos);
-        target.cloud.cloud.visible = true;
-        target.cloud.start();
-
-        setTimeout(function () {
-            target.cloud.cloud.visible = false;
-            target.cloud.stop();
-        }, 2000);
-
-        target.health -= this.damage;
 
 
     },
     die: function () {
         this.mesh.visible = false;
+        if(this.type!=="inf")
         this.ammo[0].cube.visible = false;
         this.target = null;
 
@@ -328,9 +379,12 @@ var entityProto = {
 
         //clouds
         if (this.cloud.cloud.visible)
+//if (this.cloud.cloud.rate)
             this.cloud.update(dt);
         if (this.blastCloud && this.blastCloud.cloud.visible)
             this.blastCloud.update(dt);
+        if (this.barrelCloud && this.barrelCloud.cloud.visible)
+            this.barrelCloud.update(dt);
 
 
         //beginning of the line
@@ -339,43 +393,41 @@ var entityProto = {
 //            this.line.geometry.vertices[10 -this.wayPointsClicked + this.wayPoints.length]= this.pos;
 //        }
 //    }
-        if (this.wayPoints[0]) {
-            var lineHeight = 2;
-            var vectora = this.pos.clone();
-            vectora.y = vectora.y + lineHeight;
-            this.line.geometry.vertices[0] = vectora;
-            for (var i = 0; i < this.wayPoints.length; ++i) {
-                var vector = this.wayPoints[i].clone();
-                vector.y = vector.y + lineHeight;
-                this.line.geometry.vertices[i + 1] = vector;
-            }
+//if(firstBlood&&this.side==="red"&&this.type==="how"&&this.range<201)this.range+=15;
 
-            for (var i = 0; i < 9 - this.wayPoints.length; ++i) {
-                var vector = this.wayPoints[this.wayPoints.length - 1].clone();
-                vector.y = vector.y + lineHeight;
-                this.line.geometry.vertices[9 - i] = vector;
-                //this.line.geometry.vertices[this.wayPointsClicked - this.wayPoints.length -1 ] = this.pos;
+
+        if (this.wayPoints[0])
+            this.goal = this.wayPoints[0];
+//        else
+//            this.goal = this.pos.clone();
+        if (this.goal)
+            var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
+        else
+            dx = 0;
+
+
+        this.getClosestTarget();
+
+        if (//this.state !== 'engaged' && 
+                dx.length() > this.closeEnough
+                || this.wayPoints.length > 0) {
+            if (this.side === "blue" || (this.side === "red" && this.state !== "engaged"))
+                this.state = 'moving';
+
+        }
+
+        if (controller.enemyBehavior === "1" 
+                && this.side === "red" && Boolean(this.isAttackedBy) 
+                && tanks[this.isAttackedBy - 1].side === "blue" && tanks[this.isAttackedBy - 1].state !== "dead"
+                ) {
+            for (var i = 0; i < tanks.length; ++i) {
+                if (tanks[i].side === "blue" || tanks[i].type === "how" || tanks[i].state === "engaged")
+                    continue;
+                tanks[i].goal = tanks[this.isAttackedBy - 1].pos;
 
             }
 
         }
-        this.line.geometry.verticesNeedUpdate = true;
-
-        if (this.wayPoints[0])
-            this.goal = this.wayPoints[0];
-        if (this.goal)
-            var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
-        else
-            dx = new THREE.Vector3().copy(this.pos);
-
-        this.getClosestTarget();
-
-        if (
-                //this.state !== 'engaged' && 
-                dx.length() > this.closeEnough
-                || this.wayPoints.length > 0)
-            this.state = 'moving';
-
         switch (this.state) {
             case('idle'):
                 if (this.health < 0) {
@@ -383,6 +435,9 @@ var entityProto = {
                     this.die();
                     return;
                 }
+
+
+
                 return;
             case('moving'):
                 if (this.health < 0) {
@@ -420,7 +475,7 @@ var entityProto = {
 
     }
 };
-function Tank(side, scene, loc, loader, collid, yRotation) {
+function Tank(side, scene, loc, loader, collid, selectables, yRotation) {
 
     this.type = 'tank';
     this.speed = 10.0;
@@ -444,11 +499,26 @@ function Tank(side, scene, loc, loader, collid, yRotation) {
     }
     ;
 
-    this.model00Url = "models/tank/body.json";
-    this.model01Url = "models/tank/turret.json";
-    this.model02Url = "models/tank/barrel.json";
-    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.00734, 1.17879, -0.63025), this.model02Url, new THREE.Vector3(0, 0.25, .9), scene, yRotation, collid);
+    this.model00Url = "models/tank/t72_body.js";
+    this.model01Url = "models/tank/t72_turret.js";
+    this.model02Url = "models/tank/t72_barrel.js";
+    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.00344, 1.10835, -0.15043), this.model02Url, new THREE.Vector3(0, 0.14, -.70), scene, yRotation, collid, loader, selectables);
+    
+    this.hit = function(target){
 
+        target.cloud.cloud.position.copy(target.pos);
+        target.cloud.cloud.visible = true;
+        target.cloud.start();
+
+        setTimeout(function () {
+            target.cloud.cloud.visible = false;
+            target.cloud.stop();
+        }, 1200);
+
+        target.health -= this.damage;
+        target.isAttackedBy = this.id;
+        
+    };
     this.shoot = function (dt) {
         lookTowards(this.shotAmmo.cube, this.shotAtPos, 100);
         var dx = new THREE.Vector3();
@@ -487,7 +557,7 @@ function Tank(side, scene, loc, loader, collid, yRotation) {
         var dTheta = dt * this.traverseSpeed;
         this.rotatedToTarget = false;
         lookTowards(this.turretMesh, this.mesh.worldToLocal(this.target.turretMesh.getWorldPosition()), dTheta, undefined, this);
-        if (this.rotatedToTarget && !this.reloading) {
+        if (this.rotatedToTarget && !this.reloading && !this.shooting) {
             //this.shoot(dt,this.target);
             this.shotToTarget = this.target;
             this.shotAmmo = this.chooseAmmo();
@@ -505,14 +575,106 @@ function Tank(side, scene, loc, loader, collid, yRotation) {
     this.init();
 
 }
+function Infantry(side, scene, loc, loader, collid, selectables, yRotation) {
 
-function Howitzer(side, scene, loc, loader, collid, yRotation) {
+    this.type = 'inf';
+    this.speed = 15.0;
+    this.rotationSpeed = 3.0;
+    this.traverseSpeed = 2.0;
+    this.elevateSpeed = 0.0;
 
-    this.type = 'tank';
+    this.armor = 75;
+
+    this.side = side;
+    
+    this.barrelPos = new THREE.Vector3(0,0,1);
+
+    this.range = 20;
+    this.health = this.armor;
+    this.damage = 10;
+
+this.barrelCloud = {cloud: new THREE.Object3D()};
+    this.barrelCloud.cloud.visible = false;
+
+    var that = this;
+    function particlesLoaded(mapA) {
+
+        that.barrelCloud.cloud.position.set(5, 5, 5);
+//        scene.add(that.barrelCloud.cloud);
+        that.barrelCloud.cloud.visible = false;
+
+        that.barrelCloud = new SpriteParticleSystem({
+            cloud: that.barrelCloud.cloud,
+            rate: 30,
+            num: 30,
+            texture: mapA,
+            //scaleR:[0.1,.2],
+            scaleR: [.0025, .05],
+            speedR: [0, 0.5],
+            rspeedR: [-0.1, 0.3],
+            lifespanR: [1, 4],
+            terminalSpeed: 20
+        });
+//        this.blastCloud.start();
+        //that.barrelCloud.addForce(new THREE.Vector3(0, 40, 0));
+
+    }
+    THREE.ImageUtils.loadTexture("images/barrel_light.png", undefined, particlesLoaded);
+
+    this.model00Url = "models/tank/inf_body.js";
+    this.model01Url = "models/tank/inf_turret.js";
+    this.model02Url = "models/tank/inf_barrel.js";
+    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.08076, 1.52923, 0.42493), this.model02Url, new THREE.Vector3(.012, 0.168, .583), scene, yRotation, collid, loader, selectables,this.barrelCloud.cloud);
+
+   this.hit = function(target){
+
+//       this.barrelCloud.cloud.position.copy(this.barrelMesh.getWorldPosition());
+        this.barrelCloud.cloud.visible = true;
+        this.barrelCloud.start();
+        var that =this;
+        setTimeout(function () {
+            that.barrelCloud.cloud.visible = false;
+            that.barrelCloud.stop();
+        }, 1200);
+
+        target.health -= this.damage;
+        target.isAttackedBy = this.id;
+        
+    };
+    this.shoot = function (dt) {
+        this.hit(this.shotToTarget);
+        this.shooting = false;
+
+    };
+
+    this.engage = function (dt) {
+        var dTheta = dt * this.traverseSpeed;
+        this.rotatedToTarget = false;
+        lookTowards(this.turretMesh, this.mesh.worldToLocal(this.target.turretMesh.getWorldPosition()), dTheta, undefined, this);
+        if (this.rotatedToTarget && !this.reloading && !this.shooting) {
+
+            this.shotToTarget = this.target;
+
+            this.shooting = true;
+            this.reloading = true;
+            var that = this;
+            setTimeout(function () {
+                that.reloading = false;
+            }, 1000);
+        }
+
+    };
+    this.init();
+
+}
+
+function Howitzer(side, scene, loc, loader, collid, selectables, yRotation) {
+
+    this.type = 'how';
     this.speed = 10.0;
     this.rotationSpeed = 5.0;
     this.traverseSpeed = 2.0;
-    this.elevateSpeed = 2.0;
+    this.elevateSpeed = .5;
 
     this.armor = 100;
 
@@ -528,6 +690,8 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
     this.heightPoint = new THREE.Vector3();
     this.heightPointY = new THREE.Vector3();
     this.halfDistance = new THREE.Vector3();
+    
+    this.levitatedToTarget = false;
 
     this.blastCloud = {cloud: new THREE.Object3D()};
     this.blastCloud.cloud.visible = false;
@@ -540,7 +704,7 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
         that.blastCloud.cloud.visible = false;
 
         that.blastCloud = new SpriteParticleSystem({
-            cloud: that.cloud.cloud,
+            cloud: that.blastCloud.cloud,
             rate: 30,
             num: 30,
             texture: mapA,
@@ -551,6 +715,9 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
             lifespanR: [1, 4],
             terminalSpeed: 20
         });
+//        this.blastCloud.start();
+        that.blastCloud.addForce(new THREE.Vector3(0, 40, 0));
+
     }
     THREE.ImageUtils.loadTexture("images/smoke1.png", undefined, particlesLoaded);
 
@@ -582,21 +749,22 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
     }
     ;
 
-    this.model00Url = "models/tank/body.json";
-    this.model01Url = "models/tank/turret.json";
-    this.model02Url = "models/tank/barrel.json";
-    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.00734, 1.17879, -0.63025), this.model02Url, new THREE.Vector3(0, 0.25, .9), scene, yRotation, collid);
+    this.model00Url = "models/tank/how_body.js";
+    this.model01Url = "models/tank/how_turret.js";
+    this.model02Url = "models/tank/how_barrel.js";
+    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(-0.09898, .85355, .04284), this.model02Url, new THREE.Vector3(-.04, 0.42, 1.15), scene, yRotation, collid, loader, selectables);
 
     this.hit = function (position) {
         this.blastCloud.cloud.position.copy(position);
         this.blastCloud.cloud.visible = true;
-        this.blastCloud.addForce(new THREE.Vector3(0, 40, 0));
+        //this.blastCloud.addForce(new THREE.Vector3(0, 40, 0));
         this.blastCloud.start();
 
         var that = this;
         setTimeout(function () {
-            that.blastCloud.cloud.visible = false;
             that.blastCloud.stop();
+            that.blastCloud.cloud.visible = false;
+
         }, 2000);
 
 
@@ -604,10 +772,20 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
             this.localVariable = position.distanceTo(tanks[i].pos);
             if (this.localVariable < this.effectRange) {
                 tanks[i].health -= this.damage * (this.effectRange - this.localVariable) / this.effectRange;
+                tanks[i].isAttackedBy = this.id;
+                if (this.side === "blue")
+                    firstBlood = true;
                 //console.log(tanks[i].health)
             }
-            ;
+
         }
+        if (firstBlood) {
+            for (var i = 0; i < tanks.length; ++i) {
+                if (tanks[i].side === "red" && tanks[i].type === "how"&&tanks[i].range<200)
+                    tanks[i].range += 15;
+            }
+        }
+
     };
 
     this.shoot = function (dt) {
@@ -638,13 +816,16 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
     };
 
     this.engage = function (dt) {
-        var dTheta = dt * this.elevateSpeed;
+        var dTheta = dt * this.rotationSpeed;
+        var dTheta1 = dt * this.elevateSpeed;
         this.halfDistance = this.target.pos.clone().sub(this.pos).multiplyScalar(3 / 4);
         this.heightPoint.copy(this.pos).add(this.halfDistance).add(this.heightPointY.setY(this.halfDistance.length()));
 //        this.heightPoint.copy(this.halfDistance).add(this.heightPointY.setY(this.halfDistance.length()));
         this.rotatedToTarget = false;
-        lookTowards(this.turretMesh, this.mesh.worldToLocal(this.heightPoint.clone()), dTheta, undefined, this);
-        if (this.rotatedToTarget && !this.reloading && this.pos.distanceTo(this.target.pos) > this.minRange) {
+        lookTowards(this.turretMesh, this.mesh.worldToLocal(this.heightPoint.clone().setY(this.turretMesh.getWorldPosition().y)), dTheta, undefined, this);
+        if (this.rotatedToTarget)
+            lookTowards(this.barrelMesh, this.turretMesh.worldToLocal(this.heightPoint.clone()), dTheta1, undefined, this, true);
+        if (this.levitatedToTarget && !this.reloading && !this.shooting && this.pos.distanceTo(this.target.pos) > this.minRange) {
 
             //renew the ballistic path
             this.curve.v0.copy(this.barrelMesh.getWorldPosition());
@@ -680,3 +861,4 @@ function Howitzer(side, scene, loc, loader, collid, yRotation) {
 
 Tank.prototype = entityProto;
 Howitzer.prototype = entityProto;
+Infantry.prototype = entityProto;

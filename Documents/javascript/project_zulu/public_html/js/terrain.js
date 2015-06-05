@@ -43,9 +43,44 @@ function initTerrain() {
 
 
     }
+    function onGeometryLoaded1(geometry, materials) {
+        var nReps1 = 250.0;
+terrainUniforms1.uSplat1Repeat.value.x = nReps1;
+terrainUniforms1.uSplat1Repeat.value.y = nReps1;
+terrainUniforms1.uSplat2Repeat.value.x = nReps1;
+terrainUniforms1.uSplat2Repeat.value.y = nReps1;
+terrainUniforms1.uSplat3Repeat.value.x = nReps1;
+terrainUniforms1.uSplat3Repeat.value.y = nReps1;
+terrainUniforms1.uSplat4Repeat.value.x = nReps1;
+terrainUniforms1.uSplat4Repeat.value.y = nReps1;
+
+        terrainUniforms1.tSplat1.value = THREE.ImageUtils.loadTexture("images/SUNNY-Assorted-Ground.png");
+        terrainUniforms1.tSplat2.value = THREE.ImageUtils.loadTexture("images/grass-and-rock.png");
+        terrainUniforms1.tSplat3.value = THREE.ImageUtils.loadTexture("images/snow.png");
+        terrainUniforms1.tSplat4.value = THREE.ImageUtils.loadTexture("images/SUNNY-Mottled-Stone-and-Dirt.png");
+        terrainUniforms1.tAlphaMap.value = THREE.ImageUtils.loadTexture("images/splat2.png");
+
+
+        terrainMaterial = new THREE.TerrainMaterial({
+            uniforms: terrainUniforms1,
+            vertexShader: terrainVertexShader,
+            fragmentShader: terrainFragShader,
+            lights: true,
+        });
+        materials.push(terrainMaterial);
+        var plane1 = new THREE.Mesh(geometry, terrainMaterial);
+        
+        //terrainMesh.receiveShadow = true;
+        scene.add(plane1);
+        plane1.position.y = -.5;
+        //objects.push(plane);
+
+
+    }
 
     var loader = new THREE.JSONLoader();
 
     loader.load("models/terrain/plane2.json", onGeometryLoaded);
+    loader.load("models/terrain/plane.js", onGeometryLoaded1);
 }
 
