@@ -6,7 +6,7 @@
 
 // global variables and usual functions
 var box;
-var scene, camera, controls;
+var scene, camera,cameraFirst,cameraCount, controls;
 var cameraDefaultPos;
 var objects = [];
 var mouse, raycaster, plane;
@@ -15,6 +15,7 @@ var tank;
 var tanks = [];
 //var entitiesCollider = [];
 var myCanvas, w, h;
+var container;
 var shiftPressed = false;
 var ctrlPressed = false;
 var entitiesBoundingBox = [];
@@ -73,7 +74,15 @@ var initScene = function () {
 
     renderer = new THREE.WebGLRenderer({canvas: myCanvas});
     renderer.setSize(w, h);
-    renderer.setClearColor(0x777777);
+//var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;	
+//
+//renderer = new THREE.WebGLRenderer( {antialias:true} );
+//renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+//container = document.getElementById( 'container' );
+//container.appendChild( renderer.domElement );
+
+      renderer.autoClearColor = false;
+    //renderer.setClearColor(0x777777);
 
     scene = new THREE.Scene();
 
@@ -83,6 +92,13 @@ var initScene = function () {
             0.1, // Near
             2000000   // Far
             );
+    cameraFirst = new THREE.PerspectiveCamera(
+            35, // Field of view
+            w / h, // Aspect ratio
+            0.1, // Near
+            2000000   // Far
+            );
+    cameraCount = 0;
 };
 function initSky() {
 
@@ -139,6 +155,7 @@ function initSky() {
             sunInclination += dt/10;
         else
         sunInclination += dt/100;
+//    console.log(sunInclination);
         var theta = Math.PI * (sunInclination - 0.5);
         var phi = 2 * Math.PI * (0.25 - 0.5);
 
@@ -163,6 +180,13 @@ function initSky() {
         var halfTheta = Math.acos(q1.w);
         return 2 * halfTheta;
     }
+    THREE.Raycaster.prototype.setFromCameraNew = function (coords, camera){ // is not working on child cameras
+	//camera is assumed perspective camera
+	var vector = new THREE.Vector3();
+	vector.setFromMatrixPosition(camera.matrixWorld);
+	this.ray.origin.copy( vector );
+	this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( vector ).normalize();
+}
 
     function lookTowards(fromObject, toPosition, dTheta, goalDirection, tank, how) {
         var quat0 = new THREE.Quaternion();
@@ -202,6 +226,9 @@ function initSky() {
 
         mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
 
+        if (cameraCount%2===1)
+            raycaster.setFromCameraNew(mouse, cameraFirst);
+        else
         raycaster.setFromCamera(mouse, camera);
 
         var intersects = raycaster.intersectObjects(objects);
@@ -225,7 +252,12 @@ function initSky() {
 
         //mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
         mouse.set((event.pageX / w) * 2 - 1, -(event.pageY / h) * 2 + 1);
+        
+        if (cameraCount%2===1)
+            raycaster.setFromCameraNew(mouse, cameraFirst);
+        else
         raycaster.setFromCamera(mouse, camera);
+    
         var planeIntersects = raycaster.intersectObjects(objects);
 //    var intersects = raycaster.intersectObjects(entitiesCollider);
         var intersects = raycaster.intersectObjects(selectables);

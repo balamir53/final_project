@@ -14,6 +14,7 @@ var controller = {
     pause : false,
     enemyBehavior:0,
     zoomToUnit:false,
+    pan:false,
     stopUnit : function(){
         tank.wayPoints =[];
        
@@ -39,11 +40,20 @@ var controller = {
         v2.add(controller, "pause");
         v2.add(controller, "stopUnit");
         v2.add(controller, "resetAllWaypoints");
+        v2.add(controller,"pan");
         v2.add(controller,"zoomToUnit").onChange(function(){
             if(controller.zoomToUnit&&tank){
-                camera.position.copy(tank.mesh.localToWorld(new THREE.Vector3(0,30,-60)));
-                camera.lookAt(tank.mesh.localToWorld(new THREE.Vector3(0,0,30)));
-            }else {camera.position.copy(cameraDefaultPos); camera.lookAt(new THREE.Vector3());
+                cameraCount+=1;
+                if(cameraFirst.parent)
+                    THREE.SceneUtils.detach(cameraFirst,cameraFirst.parent,scene);
+                THREE.SceneUtils.attach(cameraFirst,scene,tank.mesh);
+                cameraFirst.position.set(0,70,-70);
+                
+//                camera.position.copy(tank.mesh.localToWorld(new THREE.Vector3(0,30,-60)));
+                //cameraFirst.lookAt(tank.mesh.localToWorld(new THREE.Vector3(0,0,30)));
+                cameraFirst.lookAt(new THREE.Vector3(0,0,30));
+            }else {cameraCount+=1;
+//                camera.position.copy(cameraDefaultPos); camera.lookAt(new THREE.Vector3());
             }
         });
         v2.add(controller,"enemyBehavior",{defensive:0,aggressive:1}).onChange(function(){

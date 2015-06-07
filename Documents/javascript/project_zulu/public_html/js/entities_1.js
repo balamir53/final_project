@@ -169,6 +169,10 @@ var entityProto = {
 
     },
     getClosestTarget: function () {
+        var range;
+                if (sunInclination>.53 && sunInclination <1.78)
+            range= this.range/2
+        else range =this.range;
         if (this.isAttackedBy && tanks[this.isAttackedBy - 1].state === "dead")
             this.isAttackedBy = null;
         this.minDistance = Infinity;
@@ -179,7 +183,7 @@ var entityProto = {
             if (tanks[i].side === this.side || tanks[i].type !== this.type || tanks[i].state === 'dead')
                 continue;
             this.distance = this.pos.distanceTo(tanks[i].pos);
-            if (this.distance < this.range && this.distance >this.minRange && this.minDistance>this.distance) {
+            if (this.distance < range && this.distance >this.minRange && this.minDistance>this.distance) {
                 this.target = tanks[i];
                 this.state = 'engaged';
                 this.minDistance = this.distance;
@@ -194,7 +198,7 @@ var entityProto = {
                 this.distance = this.pos.distanceTo(tanks[i].pos);
                 if (tanks[i].side === this.side || tanks[i].state === 'dead')
                     continue;
-                if (this.distance < this.range && this.distance > this.minRange && this.minDistance>this.distance) {
+                if (this.distance < range && this.distance > this.minRange && this.minDistance>this.distance) {
                     this.target = tanks[i];
                     this.state = 'engaged';
                     this.minDistance = this.distance;
@@ -398,8 +402,8 @@ var entityProto = {
 
         if (this.wayPoints[0])
             this.goal = this.wayPoints[0];
-//        else
-//            this.goal = this.pos.clone();
+        else
+            this.goal = this.pos.clone();
         if (this.goal)
             var dx = new THREE.Vector3().subVectors(this.goal, this.mesh.position);
         else
@@ -423,7 +427,8 @@ var entityProto = {
             for (var i = 0; i < tanks.length; ++i) {
                 if (tanks[i].side === "blue" || tanks[i].type === "how" || tanks[i].state === "engaged")
                     continue;
-                tanks[i].goal = tanks[this.isAttackedBy - 1].pos;
+//                tanks[i].goal = tanks[this.isAttackedBy - 1].pos;
+                tanks[i].wayPoints.push(tanks[this.isAttackedBy - 1].pos);
 
             }
 

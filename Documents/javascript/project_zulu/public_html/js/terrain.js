@@ -17,6 +17,8 @@ terrainUniforms.uSplat4Repeat.value.y = nReps;
 
 
 var terrainMaterial;
+var skyboxScene,skyboxCamera,skyboxMesh;
+
 
 function initTerrain() {
 
@@ -82,5 +84,38 @@ terrainUniforms1.uSplat4Repeat.value.y = nReps1;
 
     loader.load("models/terrain/plane2.json", onGeometryLoaded);
     loader.load("models/terrain/plane.js", onGeometryLoaded1);
+}
+
+function initSkybox() {
+    
+      skyboxCamera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, .1, 20000 );
+  skyboxScene = new THREE.Scene();
+
+  var path = "images/sunnysky/";
+  var format = '.jpg';
+  var urls = [
+  path + 'px' + format, path + 'nx' + format,
+  path + 'py' + format, path + 'ny' + format,
+  path + 'pz' + format, path + 'nz' + format
+  ];
+
+  var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+
+  var shader = THREE.ShaderLib["cube"];
+  shader.uniforms["tCube"].value = textureCube;
+
+  // We're inside the box, so make sure to render the backsides
+  // It will typically be rendered first in the scene and without depth so anything else will be drawn in front
+  var material = new THREE.ShaderMaterial({
+    fragmentShader : shader.fragmentShader,
+    vertexShader   : shader.vertexShader,
+    uniforms       : shader.uniforms,
+    depthWrite     : false,
+    side           : THREE.BackSide
+  });
+
+  // The box dimension size doesn't matter that much when the camera is in the center.  Experiment with the values.
+  skyboxMesh = new THREE.Mesh(new THREE.BoxGeometry(1000, 1000, 1000, 1, 1, 1), material);
+  skyboxScene.add(skyboxMesh);
 }
 

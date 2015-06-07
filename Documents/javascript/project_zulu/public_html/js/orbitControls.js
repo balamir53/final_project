@@ -267,6 +267,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	};
 
 	this.update = function () {
+            this.noPan = !controller.pan;
 
 		var position = this.object.position;
 
