@@ -14,7 +14,9 @@ var controller = {
     pause : false,
     enemyBehavior:0,
     zoomToUnit:false,
-    pan:false,
+    pan:true,
+    music:true,
+    sound:true,
     stopUnit : function(){
         tank.wayPoints =[];
        
@@ -41,6 +43,11 @@ var controller = {
         v2.add(controller, "stopUnit");
         v2.add(controller, "resetAllWaypoints");
         v2.add(controller,"pan");
+        v2.add(controller,"sound");
+        v2.add(controller,"music").onChange(function(){
+            if(!controller.music) sound.pause();
+            else sound.play();
+        });
         v2.add(controller,"zoomToUnit").onChange(function(){
             if(controller.zoomToUnit&&tank){
                 cameraCount+=1;

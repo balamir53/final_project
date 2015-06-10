@@ -28,22 +28,24 @@ and open the template in the editor.
             }
 
             .loading-container {
-/*                position: relative;
-                background: #ffffff;
-                min-height: 40px;
-                height: 95%;*/
-position:absolute;
-			top:50%;
-			left:50%;
+                /*                position: relative;
+                                background: #ffffff;
+                                min-height: 40px;
+                                height: 95%;*/
+                position:absolute;
+                top:50%;
+                left:50%;
 
             }
 
-/*            #container {
-                    min-width: 400px;
-                min-height: 400px;
-            }*/
+            /*            #container {
+                                min-width: 400px;
+                            min-height: 400px;
+                        }*/
         </style>
         <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src="sounds/sounds.js"></script>
+        <script src="js/base64-binary.js"></script>
         <script type="text/javascript" src="js/dat.gui.min.js"></script>
         <script type="text/javascript" src="js/orbitControls.js"></script>
         <script type="text/javascript" src="js/physicsUtil.js"></script>
@@ -71,8 +73,9 @@ position:absolute;
             // global variables are in zee.js 
             var init = function () {
 
-
-
+                
+                
+                initSounds();
                 initScene();
                 initSky();
 
@@ -102,10 +105,10 @@ position:absolute;
                     }
 
                 });
-                
+
                 initTerrain();
 //                initSkybox();
-                
+
                 var container = document.getElementById('container');
                 //stats
                 stats = new Stats();
@@ -117,7 +120,7 @@ position:absolute;
                 //gui
                 var gui = new dat.GUI();
                 controller.init(gui);
-                cameraDefaultPos = new THREE.Vector3(-106, 70, 300);
+                cameraDefaultPos = new THREE.Vector3(-106, 50, 450);
                 camera.position.copy(cameraDefaultPos);
                 camera.lookAt(new THREE.Vector3());
 
@@ -193,34 +196,39 @@ position:absolute;
                 window.onkeydown = onKeyDown;
                 window.onkeyup = onKeyUp;
 
-//                var loadTrees = function(loaded){
-////                    var loadTrees = function(geom,mats){
-//                    for(var i=0 ; i<loaded.children.length; ++i){
-//                        scene.add(loaded.children[i]);
-//                    }
-////var tree = new THREE.Mesh(geom,new THREE.MeshFaceMaterial(mats));
-////scene.add(tree);
-//                    
-//                    
-//                }
-//                var loader = new THREE.ObjectLoader();
-////                var loader = new THREE.JSONLoader();
-//                loader.load("models/terrain/trees.json", loadTrees);
 
 
+
+                addTree(-39, 0, 317, manager);
+                addTree(-58, 0, 326, manager);
+                addTree(-48, 0, 336, manager);
+                addTree(-68, 0, 339, manager);
+                addTree(117, 0, -63, manager);
+                addTree(119, 0, -82, manager);
+                addTree(126, 0, -73, manager);
                 //create tanks and add them to collider to be selectable
                 //var loader = new THREE.JSONLoader(manager);
 
                 //reds
-                new Howitzer('red', scene, new THREE.Vector3(9.8, 46.07, -137.25), manager, entitiesBoundingBox, selectables);
-                new Howitzer('red', scene, new THREE.Vector3(-17.65, 48.32, -180.39), manager, entitiesBoundingBox, selectables);
-                new Tank('red', scene, new THREE.Vector3(21.57, 48.49, -164.71), manager, entitiesBoundingBox, selectables);
-                new Tank('red', scene, new THREE.Vector3(-21.57, 47.54, -152.94), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(-19.5122, 50.7565, -287.8049), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(0, 52.8751, -287.8049), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(19.5122, 50.7565, -287.8049), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(-9.7561, 55.1563, -278.0488), manager, entitiesBoundingBox, selectables);
+                new Howitzer('red', scene, new THREE.Vector3(9.7561, 55.1563, -278.0488), manager, entitiesBoundingBox, selectables);
+                new Tank('red', scene, new THREE.Vector3(-19.5122, 57.3350, -239.0244), manager, entitiesBoundingBox, selectables);
+                new Tank('red', scene, new THREE.Vector3(0, 58.7506, -239.0244), manager, entitiesBoundingBox, selectables);
+                new Tank('red', scene, new THREE.Vector3(19.5122, 57.3350, -239.0244), manager, entitiesBoundingBox, selectables);
                 //blues
-                new Howitzer('blue', scene, new THREE.Vector3(-49, 0, 133), manager, entitiesBoundingBox, selectables, Math.PI);
-                new Infantry('blue', scene, new THREE.Vector3(-42, 0, 164), manager, entitiesBoundingBox, selectables, Math.PI);
-                new Infantry('blue', scene, new THREE.Vector3(2, 0, 168), manager, entitiesBoundingBox, selectables, Math.PI);
-                new Tank('blue', scene, new THREE.Vector3(-13, 0, 130), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(-175, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(-146, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Tank('blue', scene, new THREE.Vector3(-117, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Howitzer('blue', scene, new THREE.Vector3(-117, 0, 287), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Howitzer('blue', scene, new THREE.Vector3(-175, 0, 297), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Howitzer('blue', scene, new THREE.Vector3(-39, 0, 297), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Infantry('blue', scene, new THREE.Vector3(-87, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Infantry('blue', scene, new THREE.Vector3(-58, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                new Infantry('blue', scene, new THREE.Vector3(-19, 0, 258), manager, entitiesBoundingBox, selectables, Math.PI);
+                
 
 
 
@@ -251,10 +259,10 @@ position:absolute;
 
 
                     controls.update();
-                    
+
 //                      skyboxCamera.rotation.copy(camera.rotation)  ;
 //                      renderer.render( skyboxScene, skyboxCamera );
-                      
+
                     if (cameraCount % 2 === 0)
                         renderer.render(scene, camera);
                     if (cameraCount % 2 === 1) {
@@ -274,24 +282,24 @@ position:absolute;
     </head>
     <body>
         <div class = "loading-container"  >
-            
-            
+
+
         </div>
         <div id="container"> 
-                
-                <canvas style="width:100%;height:95%;border:1px gray solid;"></canvas>
-            </div>
+
+            <canvas style="width:100%;height:95%;border:1px gray solid;"></canvas>
+        </div>
 
 
-<script src="js/jquery-ui.js"></script>
-<link rel=stylesheet href="css/jquery-ui.css" />
-<link rel=stylesheet href="css/info.css"/>
-<script src="js/info.js"></script>
-<div id="infoButton"></div>
-<div id="infoBox" title="Simulation Information">
-Zonohe
+        <script src="js/jquery-ui.js"></script>
+        <link rel=stylesheet href="css/jquery-ui.css" />
+        <link rel=stylesheet href="css/info.css"/>
+        <script src="js/info.js"></script>
+        <div id="infoButton"></div>
+        <div id="infoBox" title="Simulation Information">
+            Zonohe
 
-</div>
+        </div>
 
 
     </body>

@@ -86,7 +86,7 @@ var entityProto = {
         tanks.push(this);
 
     },
-    loadModel: function (model00Url, model00Pos, model01Url, model01Pos, model02Url, model02Pos, scene, yRotation, collid, manager, selectables,barrelCloud) {
+    loadModel: function (model00Url, model00Pos, model01Url, model01Pos, model02Url, model02Pos, scene, yRotation, collid, manager, selectables, barrelCloud) {
 
         var that = this;
         var loader = new THREE.JSONLoader();
@@ -143,9 +143,10 @@ var entityProto = {
             //that.barrelMesh.position.set(0,1.46306-1.50835,0.64304);
             that.barrelMesh.position.set(model02Pos.x, model02Pos.y, model02Pos.z);
             that.turretMesh.add(that.barrelMesh);
-            if (barrelCloud){
-            barrelCloud.position.set(0,0,2);
-            that.barrelMesh.add(barrelCloud);}
+            if (barrelCloud) {
+                barrelCloud.position.set(0, 0, 2);
+                that.barrelMesh.add(barrelCloud);
+            }
             //var myCamera = camera;
             //that.barrelMesh.add(myCamera);
             //myCamera.position.set(0, 2, -10);
@@ -170,9 +171,10 @@ var entityProto = {
     },
     getClosestTarget: function () {
         var range;
-                if (sunInclination>.53 && sunInclination <1.78)
-            range= this.range/2
-        else range =this.range;
+        if (sunInclination > .53 && sunInclination < 1.78)
+            range = this.range / 2
+        else
+            range = this.range;
         if (this.isAttackedBy && tanks[this.isAttackedBy - 1].state === "dead")
             this.isAttackedBy = null;
         this.minDistance = Infinity;
@@ -183,7 +185,7 @@ var entityProto = {
             if (tanks[i].side === this.side || tanks[i].type !== this.type || tanks[i].state === 'dead')
                 continue;
             this.distance = this.pos.distanceTo(tanks[i].pos);
-            if (this.distance < range && this.distance >this.minRange && this.minDistance>this.distance) {
+            if (this.distance < range && this.distance > this.minRange && this.minDistance > this.distance) {
                 this.target = tanks[i];
                 this.state = 'engaged';
                 this.minDistance = this.distance;
@@ -198,7 +200,7 @@ var entityProto = {
                 this.distance = this.pos.distanceTo(tanks[i].pos);
                 if (tanks[i].side === this.side || tanks[i].state === 'dead')
                     continue;
-                if (this.distance < range && this.distance > this.minRange && this.minDistance>this.distance) {
+                if (this.distance < range && this.distance > this.minRange && this.minDistance > this.distance) {
                     this.target = tanks[i];
                     this.state = 'engaged';
                     this.minDistance = this.distance;
@@ -210,8 +212,8 @@ var entityProto = {
         if (this.target === null) {
             this.state = 'idle';
             lookTowards(this.turretMesh, new THREE.Vector3(0, 1.18, 10), .01);
-            if(this.type==="how")
-            lookTowards(this.barrelMesh, new THREE.Vector3(0, 1.18, 10), .01);
+            if (this.type === "how")
+                lookTowards(this.barrelMesh, new THREE.Vector3(0, 1.18, 10), .01);
         }
 
     },
@@ -296,7 +298,8 @@ var entityProto = {
             return;
         if (this.selectMesh.visible)
             this.line.visible = controller.wayPoints;
-        else this.line.visible = false;
+        else
+            this.line.visible = false;
         var lineHeight = 2;
         var vectora = this.pos.clone();
         vectora.y = vectora.y + lineHeight;
@@ -343,8 +346,8 @@ var entityProto = {
     },
     die: function () {
         this.mesh.visible = false;
-        if(this.type!=="inf")
-        this.ammo[0].cube.visible = false;
+        if (this.type !== "inf")
+            this.ammo[0].cube.visible = false;
         this.target = null;
 
         this.cloud.cloud.visible = false;
@@ -420,8 +423,8 @@ var entityProto = {
 
         }
 
-        if (controller.enemyBehavior === "1" 
-                && this.side === "red" && Boolean(this.isAttackedBy) 
+        if (controller.enemyBehavior === "1"
+                && this.side === "red" && Boolean(this.isAttackedBy)
                 && tanks[this.isAttackedBy - 1].side === "blue" && tanks[this.isAttackedBy - 1].state !== "dead"
                 ) {
             for (var i = 0; i < tanks.length; ++i) {
@@ -508,12 +511,19 @@ function Tank(side, scene, loc, loader, collid, selectables, yRotation) {
     this.model01Url = "models/tank/t72_turret.js";
     this.model02Url = "models/tank/t72_barrel.js";
     this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.00344, 1.10835, -0.15043), this.model02Url, new THREE.Vector3(0, 0.14, -.70), scene, yRotation, collid, loader, selectables);
-    
-    this.hit = function(target){
+
+    this.hit = function (target) {
 
         target.cloud.cloud.position.copy(target.pos);
         target.cloud.cloud.visible = true;
         target.cloud.start();
+        
+                            //sound
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = tank_explosionBuffer;
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        if(controller.sound)
+        source.start(0);
 
         setTimeout(function () {
             target.cloud.cloud.visible = false;
@@ -522,10 +532,11 @@ function Tank(side, scene, loc, loader, collid, selectables, yRotation) {
 
         target.health -= this.damage;
         target.isAttackedBy = this.id;
-        
+
     };
     this.shoot = function (dt) {
         lookTowards(this.shotAmmo.cube, this.shotAtPos, 100);
+
         var dx = new THREE.Vector3();
         //dx.subVectors(this.shotAtPos, this.shotAmmo.cube.position);
         dx.subVectors(this.shotAtPos, this.shotFromPos);
@@ -564,6 +575,14 @@ function Tank(side, scene, loc, loader, collid, selectables, yRotation) {
         lookTowards(this.turretMesh, this.mesh.worldToLocal(this.target.turretMesh.getWorldPosition()), dTheta, undefined, this);
         if (this.rotatedToTarget && !this.reloading && !this.shooting) {
             //this.shoot(dt,this.target);
+            
+                    //sound
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = tank_fireBuffer;
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        if(controller.sound)
+            source.start(0);
+        
             this.shotToTarget = this.target;
             this.shotAmmo = this.chooseAmmo();
             this.shotAtPos = this.target.turretMesh.getWorldPosition();
@@ -591,14 +610,14 @@ function Infantry(side, scene, loc, loader, collid, selectables, yRotation) {
     this.armor = 75;
 
     this.side = side;
-    
-    this.barrelPos = new THREE.Vector3(0,0,1);
+
+    this.barrelPos = new THREE.Vector3(0, 0, 1);
 
     this.range = 20;
     this.health = this.armor;
     this.damage = 10;
 
-this.barrelCloud = {cloud: new THREE.Object3D()};
+    this.barrelCloud = {cloud: new THREE.Object3D()};
     this.barrelCloud.cloud.visible = false;
 
     var that = this;
@@ -629,14 +648,21 @@ this.barrelCloud = {cloud: new THREE.Object3D()};
     this.model00Url = "models/tank/inf_body.js";
     this.model01Url = "models/tank/inf_turret.js";
     this.model02Url = "models/tank/inf_barrel.js";
-    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.08076, 1.52923, 0.42493), this.model02Url, new THREE.Vector3(.012, 0.168, .583), scene, yRotation, collid, loader, selectables,this.barrelCloud.cloud);
+    this.loadModel(this.model00Url, new THREE.Vector3(loc.x, loc.y, loc.z), this.model01Url, new THREE.Vector3(0.08076, 1.52923, 0.42493), this.model02Url, new THREE.Vector3(.012, 0.168, .583), scene, yRotation, collid, loader, selectables, this.barrelCloud.cloud);
 
-   this.hit = function(target){
+    this.hit = function (target) {
 
 //       this.barrelCloud.cloud.position.copy(this.barrelMesh.getWorldPosition());
+                    //sound
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = machinegunBuffer;
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        if(controller.sound)
+        source.start(0);
+        
         this.barrelCloud.cloud.visible = true;
         this.barrelCloud.start();
-        var that =this;
+        var that = this;
         setTimeout(function () {
             that.barrelCloud.cloud.visible = false;
             that.barrelCloud.stop();
@@ -644,7 +670,7 @@ this.barrelCloud = {cloud: new THREE.Object3D()};
 
         target.health -= this.damage;
         target.isAttackedBy = this.id;
-        
+
     };
     this.shoot = function (dt) {
         this.hit(this.shotToTarget);
@@ -695,7 +721,7 @@ function Howitzer(side, scene, loc, loader, collid, selectables, yRotation) {
     this.heightPoint = new THREE.Vector3();
     this.heightPointY = new THREE.Vector3();
     this.halfDistance = new THREE.Vector3();
-    
+
     this.levitatedToTarget = false;
 
     this.blastCloud = {cloud: new THREE.Object3D()};
@@ -764,6 +790,13 @@ function Howitzer(side, scene, loc, loader, collid, selectables, yRotation) {
         this.blastCloud.cloud.visible = true;
         //this.blastCloud.addForce(new THREE.Vector3(0, 40, 0));
         this.blastCloud.start();
+        
+                            //sound
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = explosionBuffer;
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        if(controller.sound)
+        source.start(0);
 
         var that = this;
         setTimeout(function () {
@@ -786,7 +819,7 @@ function Howitzer(side, scene, loc, loader, collid, selectables, yRotation) {
         }
         if (firstBlood) {
             for (var i = 0; i < tanks.length; ++i) {
-                if (tanks[i].side === "red" && tanks[i].type === "how"&&tanks[i].range<200)
+                if (tanks[i].side === "red" && tanks[i].type === "how" && tanks[i].range < 200)
                     tanks[i].range += 15;
             }
         }
@@ -845,7 +878,15 @@ function Howitzer(side, scene, loc, loader, collid, selectables, yRotation) {
                 this.curveObject.visible = true;
 
 
-
+                                    //sound
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = cannon_fireBuffer;
+//        source.connect(gainNode);
+//        gainNode.connect(audioContext.destination);
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        if(controller.sound)
+            source.start(0);
+        
             //this.shoot(dt,this.target);
             this.ammoCounter = 0;
             this.shotToTarget = this.target;

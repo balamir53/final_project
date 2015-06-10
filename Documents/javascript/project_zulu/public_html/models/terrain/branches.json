@@ -1,0 +1,75 @@
+{
+    "images": [{
+        "url": "folhagem2.png",
+        "name": "folhagem2.png",
+        "uuid": "65CF54CB-985C-3079-8D1E-9E50443CE8B1"
+    }],
+    "metadata": {
+        "type": "Object",
+        "sourceFile": "branches.blend",
+        "version": 4.3,
+        "generator": "io_three"
+    },
+    "materials": [{
+        "depthWrite": false,
+        "emissive": 0,
+        "name": "Material.001",
+        "ambient": 10724259,
+        "specular": 8355711,
+        "map": "57C8C518-0CD0-3866-88FE-BBB14474EBD7",
+        "uuid": "109C8DEC-623D-3F38-8AFD-395BEC6741C8",
+        "color": 10724259,
+        "type": "MeshPhongMaterial",
+        "blending": "NormalBlending",
+        "vertexColors": false,
+        "depthTest": true,
+        "shininess": 50
+    }],
+    "object": {
+        "type": "Scene",
+        "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+        "children": [{
+            "type": "Mesh",
+            "name": "Plane",
+            "uuid": "631279BD-3DB0-34E6-BE17-B19991DEF360",
+            "matrix": [-0,-1,0,0,0,0,1,0,-1,0,0,0,0,0,0,1],
+            "visible": true,
+            "material": "109C8DEC-623D-3F38-8AFD-395BEC6741C8",
+            "castShadow": true,
+            "receiveShadow": true,
+            "geometry": "87DAB310-D963-3818-983F-46E01A49B4FE"
+        }],
+        "uuid": "EBFF2112-832E-4C9A-A0B1-1C013201A857"
+    },
+    "geometries": [{
+        "type": "Geometry",
+        "uuid": "87DAB310-D963-3818-983F-46E01A49B4FE",
+        "data": {
+            "faces": [41,0,1,3,2,0,1,2,3,0,0,0,0],
+            "uvs": [[0,0,1,0,1,1,0,1]],
+            "name": "PlaneGeometry.4",
+            "normals": [0,0,1],
+            "metadata": {
+                "faces": 1,
+                "uvs": 1,
+                "generator": "io_three",
+                "normals": 1,
+                "version": 3,
+                "vertices": 4
+            },
+            "vertices": [-1,-1,0,1,-1,0,-1,1,0,1,1,0]
+        }
+    }],
+    "textures": [{
+        "anisotropy": 1,
+        "magFilter": "LinearFilter",
+        "name": "Texture",
+        "image": "65CF54CB-985C-3079-8D1E-9E50443CE8B1",
+        "minFilter": "LinearMipMapLinearFilter",
+        "type": "Geometry",
+        "repeat": [1,1],
+        "mapping": "UVMapping",
+        "uuid": "57C8C518-0CD0-3866-88FE-BBB14474EBD7",
+        "wrap": ["RepeatWrapping","RepeatWrapping"]
+    }]
+}
